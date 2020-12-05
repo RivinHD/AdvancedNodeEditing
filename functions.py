@@ -5,7 +5,6 @@ def resetMain(ANE):
     ANE.MainLabel = ""
     return False
 
-
 def checkExist(Name, ANE):
     if bpy.context.object == None:
         return resetMain(ANE)

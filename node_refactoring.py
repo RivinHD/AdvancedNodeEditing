@@ -12,10 +12,32 @@ class ANE_PT_NodeRefactoring(Panel):
     bl_category = "Advanced Node Editing"
 
     def draw(self, context):
+        ANE = context.preferences.addons[__package__].preferences
         layout = self.layout
         layout.operator(ANE_OT_TransferGroupInputValue.bl_idname)
         layout.operator(ANE_OT_ExtractNodeValues.bl_idname)
+        col = layout.column(align= True)
+        col.prop(ANE, 'FallbackName')
+        col.operator(ANE_OT_SetFallbackNode.bl_idname)
 classes.append(ANE_PT_NodeRefactoring)
+
+class ANE_OT_SetFallbackNode(bpy.types.Operator):
+    bl_idname = "ane.set_fallback_node"
+    bl_label = "Set Fallback Node"
+    bl_description = "Set the fallback Node. The fallnack Node is used, when no I/O Node could be addded"
+    bl_options = {"REGISTER"}
+
+    @classmethod
+    def poll(cls, context):
+        return context.object != None and context.object.active_material.node_tree.nodes.active != None
+
+    def execute(self, context):
+        ANE = context.preferences.addons[__package__].preferences
+        active = context.object.active_material.node_tree.nodes.active
+        ANE.Fallback = active.bl_idname
+        ANE.FallbackName = active.bl_rna.name
+        return {"FINISHED"}
+classes.append(ANE_OT_SetFallbackNode)
 
 class ANE_OT_ExtractNodeValues(Operator):
     bl_idname = "ane.extract_node_values"
@@ -41,19 +63,20 @@ class ANE_OT_ExtractNodeValues(Operator):
         }
 
         def create_input_node(node_type):
+            ANE = bpy.context.preferences.addons[__package__].preferences
             if node_type not in input_node_types:
-                return nodes.new("NodeReroute")
+                return nodes.new(ANE.Fallback)
             return nodes.new(input_node_types[node_type])
 
         output_node_types = {
             "RGBA": "ShaderNodeEmission",
-            "SHADER": "ShaderNodeEmission",
-            "VECTOR": "NodeReroute",
+            "SHADER": "ShaderNodeEmission"
         }
 
         def create_output_node(node_type):
+            ANE = bpy.context.preferences.addons[__package__].preferences
             if node_type not in output_node_types:
-                return nodes.new("NodeReroute")
+                return nodes.new(ANE.Fallback)
             return nodes.new(output_node_types[node_type])
 
         def set_default_output(node, value):
@@ -63,8 +86,9 @@ class ANE_OT_ExtractNodeValues(Operator):
             node_tree.links.new(input, output)
 
         def auto_connect_to_input(output, node):
+            ANE = bpy.context.preferences.addons[__package__].preferences
             for input in node.inputs:
-                if input.type == output.type or node.type == 'REROUTE':
+                if input.type == output.type or node.bl_idname == ANE.Fallback:
                     connect(input, output)
                     return
 

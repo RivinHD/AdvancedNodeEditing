@@ -9,7 +9,7 @@ bl_info = {
     "author" : "Rivin",
     "description" : "Allows you to format, align, edit your Nodes easily",
     "blender" : (2, 80, 9),
-    "version" : (0, 0, 4),
+    "version" : (0, 0, 5),
     "location" : "Node > UI",
     "category" : "Node"
 }
@@ -50,6 +50,8 @@ class ANE_Prop(AddonPreferences):
                     ('NodeSocketShader', 'Shader', ''),
                     ('NodeSocketObject', 'Object', 'type Object')]
     NodeSockets : EnumProperty(items= SocketItems, name='Sockets', description='All available Sockets for a Node')
+    Fallback : StringProperty(name= "Fallback Node", default= "NodeReroute")
+    FallbackName : StringProperty(name= "Fallback Node", default= "Reroute")
 classes.append(ANE_Prop)
 
 def register():
