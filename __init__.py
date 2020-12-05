@@ -8,7 +8,7 @@ bl_info = {
     "author" : "Rivin",
     "description" : "Allows you to format you Nodes easily",
     "blender" : (2, 80, 9),
-    "version" : (0, 0, 1),
+    "version" : (0, 0, 2),
     "location" : "Node > UI",
     "category" : "Node"
 }
@@ -357,7 +357,7 @@ class NF_OT_RenameFromSocket(Operator):
                 nodes = []
                 for nOut in node.outputs:
                     for link in nOut.links:
-                        nodeCurr = link.from_node
+                        nodeCurr = link.to_node
                         if NF.SelectionTypeRename == 'S' and not nodeCurr.select:
                             continue
                         if not (nodeCurr in nodes):
