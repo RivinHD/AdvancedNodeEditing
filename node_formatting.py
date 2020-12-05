@@ -37,9 +37,17 @@ class ANE_PT_Formating(Panel):
         col.operator(ANE_OT_SortBySocket.bl_idname, text= "Sort by Socket")
         row.prop(ANE, 'SelectionTypeSort', text="")
         layout.separator(factor= 0.5) #------------------
-        box = layout.box()
-        box.operator(ANE_OT_SimplifyGroup.bl_idname, text= "Simplify Group")
-        box.operator(ANE_OT_ReplaceWithActive.bl_idname, text= "Replace with Active")
+        layout.operator(ANE_OT_SimplifyGroup.bl_idname, text= "Simplify Group")
+        layout.operator(ANE_OT_ReplaceWithActive.bl_idname, text= "Replace with Active")
+        obj = context.object
+        if obj != None:
+            active = obj.active_material.node_tree.nodes.active
+            if active != None:
+                layout.prop(active, 'width')
+            else:
+                layout.label(text= "")     
+        else:
+            layout.label(text= "")        
 classes.append(ANE_PT_Formating)
 
 class ANE_OT_SetMain(Operator):

@@ -42,9 +42,8 @@ class ANE_OT_ExtractNodeValues(Operator):
 
         def create_input_node(node_type):
             if node_type not in input_node_types:
-                return "NodeReroute"
-            node = nodes.new(input_node_types[node_type])
-            return node
+                return nodes.new("NodeReroute")
+            return nodes.new(input_node_types[node_type])
 
         output_node_types = {
             "RGBA": "ShaderNodeEmission",
@@ -54,9 +53,8 @@ class ANE_OT_ExtractNodeValues(Operator):
 
         def create_output_node(node_type):
             if node_type not in output_node_types:
-                return "NodeReroute"
-            node = nodes.new(output_node_types[node_type])
-            return node
+                return nodes.new("NodeReroute")
+            return nodes.new(output_node_types[node_type])
 
         def set_default_output(node, value):
             node.outputs[0].default_value = value
@@ -79,7 +77,8 @@ class ANE_OT_ExtractNodeValues(Operator):
         for i in range(len(active_node.inputs)):
             input = active_node.inputs[i]
             view_node = create_input_node(input.type)
-            set_default_output(view_node, input.default_value)
+            if hasattr(input, "default_value"):
+                set_default_output(view_node, input.default_value)
             _x = x - (view_node.width + offset_x)
             _y = y
             y -= view_node.height + offset_y
