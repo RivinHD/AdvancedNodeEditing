@@ -5,11 +5,6 @@ from . import functions as fc
 
 classes = []
 
-class ANE_UL_Ports(UIList):
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        layout.label(text= item.name)
-classes.append(ANE_UL_Ports)
-
 class ANE_PT_AdvancedEdit(Panel):
     bl_idname = "ANE_PT_AdvancedEdit"
     bl_label = "Advanced"
@@ -19,38 +14,14 @@ class ANE_PT_AdvancedEdit(Panel):
 
     @classmethod
     def poll(cls, context):
-        if bpy.context.object == None:
-            return False
         active = bpy.context.object.active_material.node_tree.nodes.active
-        if bpy.ops.node.tree_path_parent.poll():
-            access = (active.node_tree.active_output != -1 or active.node_tree.active_input != -1)
-        else:
-            access = True
-        return active != None and active.type == 'GROUP' and access
+        return bpy.ops.node.tree_path_parent.poll() and (active.node_tree.active_output != -1 or active.node_tree.active_input != -1)
 
     def draw(self, context):
         layout = self.layout
         ANE = context.preferences.addons[__package__].preferences
         activeNode = context.object.active_material.node_tree.nodes.active
-        active = activeNode.node_tree    
-        if not bpy.ops.node.tree_path_parent.poll():
-            row = layout.row()
-            col = row.column()
-            col.label(text= 'Input:')
-            col.template_list('ANE_UL_Ports', '', active, 'inputs', active, 'active_input')
-            col = row.column()
-            col.label(text= 'Output:')
-            col.template_list('ANE_UL_Ports', '', active, 'outputs', active, 'active_output')
-            if active.active_output != -1 or active.active_input != -1:
-                port, socket, index = fc.getPort(active)
-                if port.is_output:
-                    layout.prop(activeNode.outputs[index], 'default_value')
-                else:
-                    layout.prop(activeNode.inputs[index], 'default_value')
-                if hasattr(port, 'min_value'):
-                    row = layout.row(align= True)
-                    row.prop(port, 'min_value') 
-                    row.prop(port, 'max_value')
+        active = activeNode.node_tree
         row = layout.row(align= True)
         col = row.column(align= True)
         col.scale_x = 3
@@ -66,14 +37,8 @@ class ANE_OT_GetTypeOfSelected(Operator):
 
     @classmethod
     def poll(cls, context):
-        if bpy.context.object == None:
-            return False
         active = bpy.context.object.active_material.node_tree.nodes.active
-        if bpy.ops.node.tree_path_parent.poll():
-            access = (active.node_tree.active_output != -1 or active.node_tree.active_input != -1)
-        else:
-            access = True
-        return active != None and active.type == 'GROUP' and access
+        return bpy.ops.node.tree_path_parent.poll() and (active.node_tree.active_output != -1 or active.node_tree.active_input != -1)
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
@@ -91,14 +56,8 @@ class ANE_OT_Apply(Operator):
 
     @classmethod
     def poll(cls, context):
-        if bpy.context.object == None:
-            return False
         active = bpy.context.object.active_material.node_tree.nodes.active
-        if bpy.ops.node.tree_path_parent.poll():
-            access = (active.node_tree.active_output != -1 or active.node_tree.active_input != -1)
-        else:
-            access = True
-        return active != None and active.type == 'GROUP' and access
+        return bpy.ops.node.tree_path_parent.poll() and (active.node_tree.active_output != -1 or active.node_tree.active_input != -1)
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
