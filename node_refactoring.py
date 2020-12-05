@@ -50,10 +50,10 @@ class ANE_OT_ExtractNodeValues(Operator):
         return context.object != None and context.object.active_material.node_tree.nodes.active != None
 
     def execute(self, context):
+        ANE = context.preferences.addons[__package__].preferences
         active_material = bpy.context.object.active_material
         node_tree = active_material.node_tree
         nodes = node_tree.nodes
-
         active_node = bpy.context.object.active_material.node_tree.nodes.active
         bpy.ops.ane.set_main()
         input_node_types = {
@@ -126,7 +126,10 @@ class ANE_OT_ExtractNodeValues(Operator):
             input = view_node.inputs[0]
             auto_connect_to_input(output, view_node)
             # connect(input, output)
+        last = ANE.SelectionTypeRename
+        ANE.SelectionTypeRename = 'A'
         bpy.ops.ane.rename_from_socket()
+        ANE.SelectionTypeRename = last
         return {'FINISHED'}
 classes.append(ANE_OT_ExtractNodeValues)
 

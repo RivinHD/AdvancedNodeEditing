@@ -9,7 +9,7 @@ bl_info = {
     "author" : "Rivin",
     "description" : "Allows you to format, align, edit your Nodes easily",
     "blender" : (2, 80, 9),
-    "version" : (0, 0, 6),
+    "version" : (0, 0, 7),
     "location" : "Node > UI",
     "category" : "Node"
 }
@@ -22,8 +22,8 @@ class ANE_Prop(AddonPreferences):
     MainNode : StringProperty(name= "Main Node", default= "")
     MainLable : StringProperty(name= "Main Lable", default= "")
     selectionItems = [("I", "Inputs", ""), ("O", "Output", ""), ("A", "All", ""), ("S", "Selection", "")]
-    SelectionTypeRename : EnumProperty(items= selectionItems)
-    SelectionTypeSort : EnumProperty(items= selectionItems)
+    SelectionTypeRename : EnumProperty(items= selectionItems, default= "A")
+    SelectionTypeSort : EnumProperty(items= selectionItems, default= "A")
     DistributOffset : FloatProperty(name= "Offset", default= 1)
 
     SocketItems = [('NodeSocketBool','Bool','boolean'),
