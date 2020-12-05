@@ -55,7 +55,7 @@ class ANE_OT_ExtractNodeValues(Operator):
         nodes = node_tree.nodes
 
         active_node = bpy.context.object.active_material.node_tree.nodes.active
-
+        bpy.ops.ane.set_main()
         input_node_types = {
             "RGBA": "ShaderNodeRGB",
             "VALUE": "ShaderNodeValue",
@@ -126,6 +126,7 @@ class ANE_OT_ExtractNodeValues(Operator):
             input = view_node.inputs[0]
             auto_connect_to_input(output, view_node)
             # connect(input, output)
+        bpy.ops.ane.rename_from_socket()
         return {'FINISHED'}
 classes.append(ANE_OT_ExtractNodeValues)
 
