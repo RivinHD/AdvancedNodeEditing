@@ -20,9 +20,9 @@ class ANE_PT_Formating(Panel):
         col2 = row.column()
         col2.scale_y = 1.5
         col2.alignment = 'CENTER'
-        col2.label(text= 'Main: ')
+        col2.label(text= 'Main:')
         box2 = row.box()
-        box2.scale_x = 1.6
+        box2.scale_x = 2
         box2.label(text= ANE.MainLable)
         col.operator(ANE_OT_SetMain.bl_idname, text= "Set Main")
         box.separator(factor= 0.5) #------------------
@@ -62,9 +62,15 @@ class ANE_OT_SetMain(Operator):
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
-        active = context.object.active_material.node_tree.nodes.active
-        ANE.MainNode = active.name
-        ANE.MainLable = active.name if active.label == '' else active.label
+        if bpy.ops.node.tree_path_parent.poll():
+            active = context.object.active_material.node_tree.nodes.active
+            activeGroup = bpy.context.object.active_material.node_tree.nodes.active.node_tree.nodes.active
+            ANE.MainNode = active.name + "\\/" + activeGroup.name
+            ANE.MainLable = (active.name if active.label == '' else active.label) + " / " + (activeGroup.name if activeGroup.label == '' else activeGroup.label)
+        else:
+            active = context.object.active_material.node_tree.nodes.active
+            ANE.MainNode = active.name
+            ANE.MainLable = active.name if active.label == '' else active.label
         return {"FINISHED"}
 classes.append(ANE_OT_SetMain)
 
@@ -82,7 +88,10 @@ class ANE_OT_RenameFromSocket(Operator):
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
         if fc.checkExist(ANE.MainNode, ANE):
-            node = context.object.active_material.node_tree.nodes[ANE.MainNode]
+            if bpy.ops.node.tree_path_parent.poll():
+                node = context.object.active_material.node_tree.nodes.active.node_tree.nodes[ANE.MainNode.split("\\/")[1]]
+            else:
+                node = context.object.active_material.node_tree.nodes[ANE.MainNode]
             if ANE.SelectionTypeRename != 'O':
                 nodes = []
                 for nIn in node.inputs:
@@ -105,6 +114,7 @@ class ANE_OT_RenameFromSocket(Operator):
                             nodes.append(nodeCurr)
             return {"FINISHED"}
         else:
+            context.area.tag_redraw()
             return {"CANCELLED"}
 classes.append(ANE_OT_RenameFromSocket)
 
@@ -122,7 +132,10 @@ class ANE_OT_SortBySocket(Operator):
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
         if fc.checkExist(ANE.MainNode, ANE):
-            node = context.object.active_material.node_tree.nodes[ANE.MainNode]
+            if bpy.ops.node.tree_path_parent.poll():
+                node = context.object.active_material.node_tree.nodes.active.node_tree.nodes[ANE.MainNode.split("\\/")[1]]
+            else:
+                node = context.object.active_material.node_tree.nodes[ANE.MainNode]
             if ANE.SelectionTypeSort != 'O':
                 nodes = []
                 for nIn in node.inputs:
@@ -143,6 +156,7 @@ class ANE_OT_SortBySocket(Operator):
                 fc.sortNodeLocation(nodes)
             return {"FINISHED"}
         else:
+            context.area.tag_redraw()
             return {"CANCELLED"}
 classes.append(ANE_OT_SortBySocket)
 

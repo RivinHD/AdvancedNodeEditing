@@ -105,7 +105,10 @@ class ANE_OT_ALign(Operator):
         return context.object != None and context.object.active_material.node_tree.nodes.active != None
 
     def execute(self, context):
-        nodes = bpy.context.object.active_material.node_tree.nodes
+        if bpy.ops.node.tree_path_parent.poll():
+            nodes = bpy.context.object.active_material.node_tree.nodes.active.node_tree.nodes
+        else:
+            nodes = bpy.context.object.active_material.node_tree.nodes
         active = nodes.active
         selected = fc.getSelected(nodes, active.name)
         aligment = 0 if self.Axis == 'X' else 1
@@ -144,7 +147,10 @@ class ANE_OT_Distribute(Operator):
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
-        nodes = bpy.context.object.active_material.node_tree.nodes
+        if bpy.ops.node.tree_path_parent.poll():
+            nodes = bpy.context.object.active_material.node_tree.nodes.active.node_tree.nodes
+        else:
+            nodes = bpy.context.object.active_material.node_tree.nodes
         if not (self.Pivot == "Vertical" or self.Pivot == "Horizontal"):
             offset = ANE.DistributOffset
             active = nodes.active

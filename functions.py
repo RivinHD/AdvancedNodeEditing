@@ -1,12 +1,28 @@
 import bpy
 
+def resetMain(ANE):
+    ANE.MainNode = ""
+    ANE.MainLabel = ""
+    return False
+
+
 def checkExist(Name, ANE):
-    if bpy.context.object.active_material.node_tree.nodes.find(Name) != -1:
-        return True
+    if bpy.context.object == None:
+        return resetMain(ANE)
+    if bpy.ops.node.tree_path_parent.poll():
+        active = bpy.context.object.active_material.node_tree.nodes.active
+        if active == None and active.type == 'GROUP':
+            return resetMain(ANE)
+        group, node = Name.split("\\/")
+        if active.name == group and active.node_tree.nodes.find(node) != -1:
+            return True
+        else:
+            return resetMain(ANE)
     else:
-        ANE.MainNode = ""
-        ANE.MainLabel = ""
-        return False
+        if bpy.context.object.active_material.node_tree.nodes.find(Name) != -1:
+            return True
+        else:
+            return resetMain(ANE)
 
 def getDistances(nodes, index):
     l = [0]
