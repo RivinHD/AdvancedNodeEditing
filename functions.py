@@ -9,12 +9,15 @@ def checkExist(Name, ANE):
     if bpy.context.object == None:
         return resetMain(ANE)
     if bpy.ops.node.tree_path_parent.poll():
-        active = bpy.context.object.active_material.node_tree.nodes.active
-        if active == None and active.type == 'GROUP':
+        active = getNodeOfTree(bpy.context.object.active_material, bpy.context.space_data.edit_tree)
+        if active == None or active.type != 'GROUP':
             return resetMain(ANE)
-        group, node = Name.split("\\/")
-        if active.name == group and active.node_tree.nodes.find(node) != -1:
-            return True
+        node = Name.split("\\/")
+        if active.name == node[0] and active.node_tree.nodes.find(node[1]) != -1:
+            if len(node) > 2:
+                return checkExist("\\/".join(node[1:]), ANE)
+            else:
+                return True
         else:
             return resetMain(ANE)
     else:
@@ -139,3 +142,30 @@ def transfer_output_value(output, value):
         to_sockets.extend(get_terminal_to_sockets(to_socket))
     for to_socket in to_sockets:
         to_socket.default_value = value
+
+def getMainNode(mainNode, nodes):
+    mainNode = mainNode.split("\\/")
+    if bpy.ops.node.tree_path_parent.poll() and len(mainNode) > 1:
+        if len(mainNode) > 2:
+            return getMainNode("\\/".join(mainNode[1:]), nodes.active.node_tree.nodes)
+        else:
+            return nodes.active.node_tree.nodes[mainNode[1]]
+    else:
+        return nodes[mainNode[0]]
+
+def getNodeOfTree(base, node_tree):
+    if base.node_tree == node_tree:
+        return base
+    else:
+        return getNodeOfTree(base.node_tree.nodes.active, node_tree)
+
+def copyData(dataObj, obj):
+    props = dataObj.rna_type.properties
+    for prop in props:
+        idf = prop.identifier
+        if not prop.is_readonly and idf != 'name':
+            exec("obj." + idf + "= dataObj." + idf)
+    for nIn in dataObj.inputs:
+        obj.inputs[nIn.identifier].default_value = nIn.default_value
+    for nOut in dataObj.outputs:
+        obj.outputs[nOut.identifier].default_value = nOut.default_value

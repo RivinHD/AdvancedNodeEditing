@@ -2,6 +2,7 @@ import bpy
 from bpy.types import Operator, Panel
 from bpy.props import EnumProperty
 from . import functions as fc
+from . import update
 
 classes = []
 
@@ -14,8 +15,12 @@ class ANE_PT_AligmentAndDistribut(Panel):
 
     def draw(self, context):
         layout = self.layout
-        nodes = bpy.context.object.active_material.node_tree.nodes
+        nodes = context.space_data.edit_tree.nodes
         ANE = context.preferences.addons[__package__].preferences
+        if ANE.AutoUpdate and ANE.Update:
+            box = layout.box()
+            box.label(text= "A new Version is available (" + ANE.Version + ")")
+            box.operator(update.ANE_OT_Update.bl_idname, text= "Update")
         row = layout.row()
         col = row.column()
         col.alignment = 'CENTER'
@@ -102,13 +107,10 @@ class ANE_OT_ALign(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material.node_tree.nodes.active != None
+        return context.object != None and context.object.active_material != None and context.space_data.edit_tree.nodes.active != None
 
     def execute(self, context):
-        if bpy.ops.node.tree_path_parent.poll():
-            nodes = bpy.context.object.active_material.node_tree.nodes.active.node_tree.nodes
-        else:
-            nodes = bpy.context.object.active_material.node_tree.nodes
+        nodes = context.space_data.edit_tree.nodes
         active = nodes.active
         selected = fc.getSelected(nodes, active.name)
         aligment = 0 if self.Axis == 'X' else 1
@@ -143,14 +145,11 @@ class ANE_OT_Distribute(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material.node_tree.nodes.active != None
+        return context.object != None and context.object.active_material != None and context.space_data.edit_tree.nodes.active != None
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
-        if bpy.ops.node.tree_path_parent.poll():
-            nodes = bpy.context.object.active_material.node_tree.nodes.active.node_tree.nodes
-        else:
-            nodes = bpy.context.object.active_material.node_tree.nodes
+        nodes = context.space_data.edit_tree.nodes
         if not (self.Pivot == "Vertical" or self.Pivot == "Horizontal"):
             offset = ANE.DistributOffset
             active = nodes.active

@@ -29,11 +29,11 @@ class ANE_OT_SetFallbackNode(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material.node_tree.nodes.active != None
+        return context.object != None and context.object.active_material != None and context.space_data.edit_tree.nodes.active != None
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
-        active = context.object.active_material.node_tree.nodes.active
+        active = context.space_data.edit_tree.nodes.active
         ANE.Fallback = active.bl_idname
         ANE.FallbackName = active.bl_rna.name
         return {"FINISHED"}
@@ -47,14 +47,13 @@ class ANE_OT_ExtractNodeValues(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material.node_tree.nodes.active != None
+        return context.object != None and context.object.active_material != None and context.space_data.edit_tree.nodes.active != None
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
-        active_material = bpy.context.object.active_material
-        node_tree = active_material.node_tree
+        node_tree = context.space_data.edit_tree
         nodes = node_tree.nodes
-        active_node = bpy.context.object.active_material.node_tree.nodes.active
+        active_node = context.space_data.edit_tree.nodes.active
         bpy.ops.ane.set_main()
         input_node_types = {
             "RGBA": "ShaderNodeRGB",
@@ -139,13 +138,13 @@ class ANE_OT_TransferGroupInputValue(Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.object == None:
+        if context.object == None or context.object.active_material == None:
             return False
-        active = context.object.active_material.node_tree.nodes.active
+        active = context.space_data.edit_tree.nodes.active
         return active != None and active.type == 'GROUP'
 
     def execute(self, context):
-        node_group_instance = bpy.context.object.active_material.node_tree.nodes.active
+        node_group_instance = context.space_data.edit_tree.nodes.active
         if node_group_instance.bl_idname != "ShaderNodeGroup":
             raise ValueError("select ShaderNodeGroup.")
         node_group_input = fc.find_node_input(node_group_instance.node_tree.nodes)

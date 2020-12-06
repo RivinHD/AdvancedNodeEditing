@@ -40,8 +40,8 @@ class ANE_PT_Formating(Panel):
         layout.operator(ANE_OT_SimplifyGroup.bl_idname, text= "Simplify Group")
         layout.operator(ANE_OT_ReplaceWithActive.bl_idname, text= "Replace with Active")
         obj = context.object
-        if obj != None:
-            active = obj.active_material.node_tree.nodes.active
+        if obj != None and obj.active_material != None:
+            active = context.space_data.edit_tree.nodes.active
             if active != None:
                 layout.prop(active, 'width')
             else:
@@ -58,19 +58,25 @@ class ANE_OT_SetMain(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material.node_tree.nodes.active != None
+        return context.object != None and context.object.active_material != None and context.space_data.edit_tree.nodes.active != None
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
-        if bpy.ops.node.tree_path_parent.poll():
-            active = context.object.active_material.node_tree.nodes.active
-            activeGroup = bpy.context.object.active_material.node_tree.nodes.active.node_tree.nodes.active
-            ANE.MainNode = active.name + "\\/" + activeGroup.name
-            ANE.MainLable = (active.name if active.label == '' else active.label) + " / " + (activeGroup.name if activeGroup.label == '' else activeGroup.label)
-        else:
-            active = context.object.active_material.node_tree.nodes.active
+        node_tree = context.space_data.edit_tree
+        base = fc.getNodeOfTree(context.object.active_material, node_tree)
+        if base.rna_type.name == 'Material':
+            active = node_tree.nodes.active
             ANE.MainNode = active.name
             ANE.MainLable = active.name if active.label == '' else active.label
+        else:
+            active = node_tree.nodes.active
+            totalBase = context.object.active_material.node_tree.nodes.active
+            path = totalBase.name
+            while totalBase != active:
+                totalBase = totalBase.node_tree.nodes.active
+                path += "\\/" + totalBase.name
+            ANE.MainNode = path
+            ANE.MainLable =  (base.name if base.label == '' else base.label) + "/" + (active.name if active.label == '' else active.label)
         return {"FINISHED"}
 classes.append(ANE_OT_SetMain)
 
@@ -83,15 +89,12 @@ class ANE_OT_RenameFromSocket(Operator):
     @classmethod
     def poll(cls, context):
         ANE = context.preferences.addons[__package__].preferences
-        return ANE.MainNode != ""
+        return ANE.MainNode != "" and context.object != None and context.object.active_material != None
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
         if fc.checkExist(ANE.MainNode, ANE):
-            if bpy.ops.node.tree_path_parent.poll():
-                node = context.object.active_material.node_tree.nodes.active.node_tree.nodes[ANE.MainNode.split("\\/")[1]]
-            else:
-                node = context.object.active_material.node_tree.nodes[ANE.MainNode]
+            node = fc.getMainNode(ANE.MainNode, context.object.active_material.node_tree.nodes)
             if ANE.SelectionTypeRename != 'O':
                 nodes = []
                 for nIn in node.inputs:
@@ -127,15 +130,12 @@ class ANE_OT_SortBySocket(Operator):
     @classmethod
     def poll(cls, context):
         ANE = context.preferences.addons[__package__].preferences
-        return ANE.MainNode != ""
+        return ANE.MainNode != "" and context.object != None and context.object.active_material != None
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
         if fc.checkExist(ANE.MainNode, ANE):
-            if bpy.ops.node.tree_path_parent.poll():
-                node = context.object.active_material.node_tree.nodes.active.node_tree.nodes[ANE.MainNode.split("\\/")[1]]
-            else:
-                node = context.object.active_material.node_tree.nodes[ANE.MainNode]
+            node = fc.getMainNode(ANE.MainNode, context.object.active_material.node_tree.nodes)
             if ANE.SelectionTypeSort != 'O':
                 nodes = []
                 for nIn in node.inputs:
@@ -168,13 +168,13 @@ class ANE_OT_SimplifyGroup(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.object == None:
+        if context.object == None or context.object.active_material == None:
             return False
-        active = context.object.active_material.node_tree.nodes.active
+        active = context.space_data.edit_tree.nodes.active
         return active != None and active.type == 'GROUP'
 
     def execute(self, context):
-        active = context.object.active_material.node_tree.nodes.active
+        active = context.space_data.edit_tree.nodes.active
         sockets = []
         offset = 0
         for i in range(len(active.inputs)):
@@ -211,7 +211,7 @@ class ANE_OT_SimplifyGroup(bpy.types.Operator):
                     if socket in sockets:
                         index = sockets.index(socket)
                         for link in nOut.links:
-                            context.object.active_material.node_tree.links.new(link.to_socket, active.outputs[index])
+                            context.space_data.edit_tree.links.new(link.to_socket, active.outputs[index])
                         group.outputs.remove(group.outputs[i])
                         offset += 1
                     else:
@@ -231,15 +231,16 @@ class ANE_OT_ReplaceWithActive(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material.node_tree.nodes.active != None
+        return context.object != None and context.object.active_material != None and context.space_data.edit_tree.nodes.active != None
 
     def execute(self, context):
-        node_tree = context.object.active_material.node_tree
+        node_tree = context.space_data.edit_tree
         nodes = node_tree.nodes
         active = nodes.active
         selected = fc.getSelected(nodes, active.name)
         for node in selected:
             new = nodes.new(active.bl_idname)
+            fc.copyData(active, new)
             new.location = node.location
             for i in range(len(node.inputs)):
                 for link in node.inputs[i].links:

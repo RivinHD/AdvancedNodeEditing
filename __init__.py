@@ -2,14 +2,14 @@ import bpy
 import numpy
 from bpy.types import Panel, Operator, AddonPreferences
 from bpy.props import EnumProperty, StringProperty, FloatProperty, BoolProperty
-from . import node_formatting, node_alignment_and_distribut, node_group_editing, node_refactoring
+from . import node_formatting, node_alignment_and_distribut, node_group_editing, node_refactoring, update
 
 bl_info = {
     "name" : "Advanced Node Editing",
     "author" : "Rivin",
     "description" : "Allows you to format, align, edit your Nodes easily",
     "blender" : (2, 80, 9),
-    "version" : (0, 0, 7),
+    "version" : (0, 0, 8),
     "location" : "Node > UI",
     "category" : "Node"
 }
@@ -52,6 +52,28 @@ class ANE_Prop(AddonPreferences):
     NodeSockets : EnumProperty(items= SocketItems, name='Sockets', description='All available Sockets for a Node')
     Fallback : StringProperty(name= "Fallback Node", default= "ShaderNodeEmission")
     FallbackName : StringProperty(name= "Fallback Node", default= "Emission")
+    
+    Update : BoolProperty()
+    Version : StringProperty()
+    Restart : BoolProperty()
+    AutoUpdate : BoolProperty(default= True, name= "Auto Update", description= "automatically search for a new Update")
+
+    def draw(self, context):
+        ANE = bpy.context.preferences.addons[__package__].preferences
+        layout = self.layout
+        col = layout.column()
+        row = col.row()
+        if ANE.Update:
+            row.operator(update.ANE_OT_Update.bl_idname, text= "Update")
+        else:
+            row.operator(update.ANE_OT_CheckUpdate.bl_idname, text= "Check For Updates")
+            if ANE.Restart:
+                row.operator(update.AR_OT_Restart.bl_idname, text= "Restart to Finsih")
+        if ANE.Version != '':
+            if ANE.Update:
+                col.label(text= "A new Version is available (" + ANE.Version + ")")
+            else:
+                col.label(text= "You are using the latest Vesion (" + ANE.Version + ")")
 classes.append(ANE_Prop)
 
 def register():
@@ -65,6 +87,9 @@ def register():
         bpy.utils.register_class(cls)
     for cls in node_refactoring.classes:
         bpy.utils.register_class(cls)
+    for cls in update.classes:
+        bpy.utils.register_class(cls)
+    update.register()
     print("----- Registered Advanced Node Editing -----")
 
 def unregister():
@@ -78,6 +103,9 @@ def unregister():
         bpy.utils.unregister_class(cls)
     for cls in node_refactoring.classes:
         bpy.utils.unregister_class(cls)
+    for cls in update.classes:
+        bpy.utils.unregister_class(cls)
+    update.unregister()
     print("----- Unregistered Advanced Node Editing -----")
 
 if __name__ == "__main__":
