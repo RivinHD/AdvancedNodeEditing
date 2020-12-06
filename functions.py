@@ -132,20 +132,21 @@ def get_terminal_to_sockets(to_socket) -> []:
         to_sockets.extend(get_terminal_to_sockets(link.to_socket))
     return to_sockets
 
-def transfer_output_value(output, value):
+def transfer_output_value(output, port):
     to_sockets = []
     for link in output.links:
         to_socket = link.to_socket
         to_sockets.extend(get_terminal_to_sockets(to_socket))
     for to_socket in to_sockets:
-        to_socket.default_value = value
+        if to_socket.type == port.type:
+            to_socket.default_value = port.default_value
 
 def getMainNode(mainNode, node_tree):
     mainNode = mainNode.split("\\/")
     if bpy.ops.node.tree_path_parent.poll() and len(mainNode) > 1:
         return node_tree.nodes[mainNode[1]]
     else:
-        return getNodeOfTree(bpy.context.object.active_material, node_tree)
+        return node_tree.nodes[mainNode[0]]
 
 def getNodeOfTree(base, node_tree):
     if base.node_tree == node_tree:

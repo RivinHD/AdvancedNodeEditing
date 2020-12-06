@@ -99,6 +99,8 @@ class ANE_OT_ExtractNodeValues(Operator):
         # process inputs
         for i in range(len(active_node.inputs)):
             input = active_node.inputs[i]
+            if input.bl_idname == 'NodeSocketVirtual':
+                continue
             view_node = create_input_node(input.type)
             if hasattr(input, "default_value"):
                 set_default_output(view_node, input.default_value)
@@ -115,6 +117,8 @@ class ANE_OT_ExtractNodeValues(Operator):
         # process outputs
         for i in range(len(active_node.outputs)):
             output = active_node.outputs[i]
+            if output.bl_idname == 'NodeSocketVirtual':
+                continue
             view_node = create_output_node(output.type)
             if view_node is None:
                 continue
@@ -146,11 +150,11 @@ class ANE_OT_TransferGroupInputValue(Operator):
     def execute(self, context):
         node_group_instance = context.space_data.edit_tree.nodes.active
         if node_group_instance.bl_idname != "ShaderNodeGroup":
-            raise ValueError("select ShaderNodeGroup.")
+            self.report({'ERROR'}, "select ShaderNodeGroup")
+            return {"CANCELLED"}
         node_group_input = fc.find_node_input(node_group_instance.node_tree.nodes)
         for socket_index, output in enumerate(node_group_input.outputs):
-            if output.bl_idname == "NodeSocketVirtual":
-                continue
-            fc.transfer_output_value(output, node_group_instance.inputs[socket_index].default_value)
+            if hasattr(output, 'default_value'):
+                fc.transfer_output_value(output, node_group_instance.inputs[socket_index])
         return {'FINISHED'}
 classes.append(ANE_OT_TransferGroupInputValue)
