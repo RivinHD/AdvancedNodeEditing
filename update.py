@@ -17,7 +17,7 @@ classes = []
 def CheckForUpdate():
     try:
         updateSource = requests.get(config["checkSource_URL"])
-        data = json.loads(updateSource.text)
+        data = json.loads(updateSource.content.decode("utf-8"))
         updateContent = base64.b64decode(data["content"]).decode("utf-8")
         with open(os.path.join(os.path.dirname(__file__),"__init__.py"), 'r', encoding= "utf-8", errors='ignore') as currentFile:
             currentContext = currentFile.read()
@@ -42,7 +42,7 @@ def GetVersion(line):
 
 def Update():
     source = requests.get(config["repoSource_URL"] + "/archive/master.zip")
-    with zipfile.ZipFile(BytesIO(source.text)) as extract:
+    with zipfile.ZipFile(BytesIO(source.content)) as extract:
         for exct in extract.namelist():
             tail, head = os.path.split(exct)
             dirpath = os.path.join(bpy.app.tempdir, "ANE_Update")   
