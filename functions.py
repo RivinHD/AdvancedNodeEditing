@@ -145,7 +145,7 @@ def getMainNode(mainNode, node_tree):
     if bpy.ops.node.tree_path_parent.poll() and len(mainNode) > 1:
         return node_tree.nodes[mainNode[1]]
     else:
-        return getNodeOfTree(context.object.active_material, node_tree)
+        return getNodeOfTree(bpy.context.object.active_material, node_tree)
 
 def getNodeOfTree(base, node_tree):
     if base.node_tree == node_tree:
