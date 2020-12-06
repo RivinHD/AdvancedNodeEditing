@@ -14,10 +14,7 @@ def checkExist(Name, ANE):
             return resetMain(ANE)
         node = Name.split("\\/")
         if active.name == node[0] and active.node_tree.nodes.find(node[1]) != -1:
-            if len(node) > 2:
-                return checkExist("\\/".join(node[1:]), ANE)
-            else:
-                return True
+            return True
         else:
             return resetMain(ANE)
     else:
@@ -143,21 +140,30 @@ def transfer_output_value(output, value):
     for to_socket in to_sockets:
         to_socket.default_value = value
 
-def getMainNode(mainNode, nodes):
+def getMainNode(mainNode, node_tree):
     mainNode = mainNode.split("\\/")
     if bpy.ops.node.tree_path_parent.poll() and len(mainNode) > 1:
-        if len(mainNode) > 2:
-            return getMainNode("\\/".join(mainNode[1:]), nodes.active.node_tree.nodes)
-        else:
-            return nodes.active.node_tree.nodes[mainNode[1]]
+        return node_tree.nodes[mainNode[1]]
     else:
-        return nodes[mainNode[0]]
+        return getNodeOfTree(context.object.active_material, node_tree)
 
 def getNodeOfTree(base, node_tree):
     if base.node_tree == node_tree:
         return base
     else:
-        return getNodeOfTree(base.node_tree.nodes.active, node_tree)
+        active = base.node_tree.nodes.active
+        if active.type == 'GROUP':
+            return getNodeOfTree(base.node_tree.nodes.active, node_tree)
+        else:
+            return getNodeOfTree(searchInNodes(base, node_tree), node_tree)
+
+def searchInNodes(base, node_tree):
+    for node in base.node_tree.nodes:
+        if node.type == 'GROUP':
+            if node.node_tree == node_tree:
+                return node
+            else:
+                return searchInNodes(node, node_tree)
 
 def copyData(dataObj, obj):
     props = dataObj.rna_type.properties

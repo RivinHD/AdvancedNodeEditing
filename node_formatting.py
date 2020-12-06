@@ -70,12 +70,7 @@ class ANE_OT_SetMain(Operator):
             ANE.MainLable = active.name if active.label == '' else active.label
         else:
             active = node_tree.nodes.active
-            totalBase = context.object.active_material.node_tree.nodes.active
-            path = totalBase.name
-            while totalBase != active:
-                totalBase = totalBase.node_tree.nodes.active
-                path += "\\/" + totalBase.name
-            ANE.MainNode = path
+            ANE.MainNode = base.name + "\\/" + active.name
             ANE.MainLable =  (base.name if base.label == '' else base.label) + "/" + (active.name if active.label == '' else active.label)
         return {"FINISHED"}
 classes.append(ANE_OT_SetMain)
@@ -94,7 +89,7 @@ class ANE_OT_RenameFromSocket(Operator):
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
         if fc.checkExist(ANE.MainNode, ANE):
-            node = fc.getMainNode(ANE.MainNode, context.object.active_material.node_tree.nodes)
+            node = fc.getMainNode(ANE.MainNode, context.space_data.edit_tree)
             if ANE.SelectionTypeRename != 'O':
                 nodes = []
                 for nIn in node.inputs:
@@ -135,7 +130,7 @@ class ANE_OT_SortBySocket(Operator):
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
         if fc.checkExist(ANE.MainNode, ANE):
-            node = fc.getMainNode(ANE.MainNode, context.object.active_material.node_tree.nodes)
+            node = fc.getMainNode(ANE.MainNode, context.space_data.edit_tree)
             if ANE.SelectionTypeSort != 'O':
                 nodes = []
                 for nIn in node.inputs:

@@ -17,12 +17,12 @@ class ANE_PT_AdvancedEdit(Panel):
         if not bpy.ops.node.tree_path_parent.poll():
             return False
         active = fc.getNodeOfTree(context.object.active_material, context.space_data.edit_tree)
-        return bpy.ops.node.tree_path_parent.poll() and (active.node_tree.active_output != -1 or active.node_tree.active_input != -1)
+        return active.type == 'GROUP' and bpy.ops.node.tree_path_parent.poll() and (active.node_tree.active_output != -1 or active.node_tree.active_input != -1)
 
     def draw(self, context):
         layout = self.layout
         ANE = context.preferences.addons[__package__].preferences
-        activeNode = context.space_data.edit_tree.nodes.active
+        activeNode = fc.getNodeOfTree(context.object.active_material, context.space_data.edit_tree)
         active = activeNode.node_tree
         row = layout.row(align= True)
         col = row.column(align= True)
@@ -42,11 +42,11 @@ class ANE_OT_GetTypeOfSelected(Operator):
         if not bpy.ops.node.tree_path_parent.poll():
             return False
         active = fc.getNodeOfTree(context.object.active_material, context.space_data.edit_tree)
-        return bpy.ops.node.tree_path_parent.poll() and (active.node_tree.active_output != -1 or active.node_tree.active_input != -1)
+        return active.type == 'GROUP' and bpy.ops.node.tree_path_parent.poll() and (active.node_tree.active_output != -1 or active.node_tree.active_input != -1)
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
-        active = context.space_data.edit_tree.nodes.active.node_tree
+        active = fc.getNodeOfTree(context.object.active_material, context.space_data.edit_tree)
         port, socket, index = fc.getPort(active)
         ANE.NodeSockets = fc.getDefaultSocket(active, port, index)
         return {"FINISHED"}
@@ -63,11 +63,11 @@ class ANE_OT_Apply(Operator):
         if not bpy.ops.node.tree_path_parent.poll():
             return False
         active = fc.getNodeOfTree(context.object.active_material, context.space_data.edit_tree)
-        return bpy.ops.node.tree_path_parent.poll() and (active.node_tree.active_output != -1 or active.node_tree.active_input != -1)
+        return active.type == 'GROUP' and bpy.ops.node.tree_path_parent.poll() and (active.node_tree.active_output != -1 or active.node_tree.active_input != -1)
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
-        activeNode = context.space_data.edit_tree.nodes.active
+        activeNode = fc.getNodeOfTree(context.object.active_material, context.space_data.edit_tree)
         active = activeNode.node_tree
         port, socket, index = fc.getPort(active)
         socketType = ANE.NodeSockets
