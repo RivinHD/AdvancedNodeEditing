@@ -82,7 +82,7 @@ def onStart(dummy = None):
     ANE.Version = ''
     ANE.Restart = False
     if ANE.AutoUpdate:
-        bpy.ops.ar.check_update('EXEC_DEFAULT')
+        bpy.ops.ane.check_update('EXEC_DEFAULT')
 
 # Operators
 class ANE_OT_CheckUpdate(Operator):

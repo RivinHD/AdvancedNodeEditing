@@ -62,6 +62,7 @@ class ANE_Prop(AddonPreferences):
         ANE = bpy.context.preferences.addons[__package__].preferences
         layout = self.layout
         col = layout.column()
+        col.prop(ANE, 'AutoUpdate')
         row = col.row()
         if ANE.Update:
             row.operator(update.ANE_OT_Update.bl_idname, text= "Update")
