@@ -54,27 +54,30 @@ class ANE_OT_ExtractNodeValues(Operator):
         return context.object != None and context.object.active_material != None and context.space_data.edit_tree.nodes.active != None
 
     def execute(self, context):
+        ANE = context.preferences.addons[__package__].preferences
         nodes = context.space_data.edit_tree.nodes
         active = nodes.active
+        offset = ANE.DistributOffset
         for node in fc.getSelected(nodes):
             node.select = False
         if len(self.inputNodes):
             for node in self.inputNodes:
                 node.select = True
             nodes.active = self.inputNodes[0]
+            ANE.DistributOffset = 0
             bpy.ops.ane.distribute('INVOKE_DEFAULT', Pivot="Bottom")
-            bpy.ops.ane.sort_by_socket('INVOKE_DEFAULT')
             for node in self.inputNodes:
                 node.select = False
         if len(self.outputNodes):
             for node in self.outputNodes:
                 node.select = True
             nodes.active = self.outputNodes[0]
+            ANE.DistributOffset = 0
             bpy.ops.ane.distribute('INVOKE_DEFAULT', Pivot="Bottom")
-            bpy.ops.ane.sort_by_socket('INVOKE_DEFAULT')
             for node in self.outputNodes:
                 node.select = False
         nodes.active = active
+        ANE.DistributOffset = offset
         return {'FINISHED'}
 
     def modal(self, context, event):
@@ -140,6 +143,7 @@ class ANE_OT_ExtractNodeValues(Operator):
                 set_default_output(view_node, input.default_value)
             _x = x - (view_node.width + offset_x)
             view_node.location = (_x, y)
+            y -= view_node.height
             output = view_node.outputs[0]
             connect(input, output)
             self.inputNodes.append(view_node)
@@ -156,6 +160,7 @@ class ANE_OT_ExtractNodeValues(Operator):
             if view_node is None:
                 continue
             view_node.location = (x, y)
+            y -= view_node.height
             input = view_node.inputs[0]
             auto_connect_to_input(output, view_node)
             self.outputNodes.append(view_node)
