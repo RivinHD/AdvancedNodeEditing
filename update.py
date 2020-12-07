@@ -1,5 +1,6 @@
 import bpy
 from bpy.types import Operator
+from bpy.app.handlers import persistent
 import requests
 import base64
 import zipfile
@@ -67,6 +68,7 @@ def Update():
         os.remove(zippath)
         os.rmdir(dirpath)
 
+@persistent
 def onStart(dummy = None):
     try:
         bpy.app.timers.unregister(onStart)
