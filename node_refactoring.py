@@ -45,11 +45,46 @@ class ANE_OT_ExtractNodeValues(Operator):
     bl_category = 'Item' 
     bl_label = "Extract Node Values"
 
+    inputNodes = []
+    outputNodes = []
+    skip = False
+
     @classmethod
     def poll(cls, context):
         return context.object != None and context.object.active_material != None and context.space_data.edit_tree.nodes.active != None
 
     def execute(self, context):
+        nodes = context.space_data.edit_tree.nodes
+        active = nodes.active
+        for node in fc.getSelected(nodes):
+            node.select = False
+        if len(self.inputNodes):
+            for node in self.inputNodes:
+                node.select = True
+            nodes.active = self.inputNodes[0]
+            bpy.ops.ane.distribute('INVOKE_DEFAULT', Pivot="Bottom")
+            bpy.ops.ane.sort_by_socket('INVOKE_DEFAULT')
+            for node in self.inputNodes:
+                node.select = False
+        if len(self.outputNodes):
+            for node in self.outputNodes:
+                node.select = True
+            nodes.active = self.outputNodes[0]
+            bpy.ops.ane.distribute('INVOKE_DEFAULT', Pivot="Bottom")
+            bpy.ops.ane.sort_by_socket('INVOKE_DEFAULT')
+            for node in self.outputNodes:
+                node.select = False
+        nodes.active = active
+        return {'FINISHED'}
+
+    def modal(self, context, event):
+        if self.skip:
+            self.skip = False
+            return {'PASS_THROUGH'}
+        else:
+            return self.execute(context)
+
+    def invoke(self, context, event):
         ANE = context.preferences.addons[__package__].preferences
         node_tree = context.space_data.edit_tree
         nodes = node_tree.nodes
@@ -91,11 +126,10 @@ class ANE_OT_ExtractNodeValues(Operator):
                     connect(input, output)
                     return
 
-        offset_x = 50
-        offset_y = 50
-
         x, y = active_node.location
+        offset_x = 50
 
+        newNodes = []
         # process inputs
         for i in range(len(active_node.inputs)):
             input = active_node.inputs[i]
@@ -105,11 +139,10 @@ class ANE_OT_ExtractNodeValues(Operator):
             if hasattr(input, "default_value"):
                 set_default_output(view_node, input.default_value)
             _x = x - (view_node.width + offset_x)
-            _y = y
-            y -= view_node.height + offset_y
-            view_node.location = (_x, _y)
+            view_node.location = (_x, y)
             output = view_node.outputs[0]
             connect(input, output)
+            self.inputNodes.append(view_node)
 
         x, y = active_node.location
         x += active_node.width + offset_x
@@ -122,18 +155,21 @@ class ANE_OT_ExtractNodeValues(Operator):
             view_node = create_output_node(output.type)
             if view_node is None:
                 continue
-            _x = x
-            _y = y
-            y -= view_node.height + offset_y
-            view_node.location = (_x, _y)
+            view_node.location = (x, y)
             input = view_node.inputs[0]
             auto_connect_to_input(output, view_node)
+            self.outputNodes.append(view_node)
             # connect(input, output)
         last = ANE.SelectionTypeRename
         ANE.SelectionTypeRename = 'A'
         bpy.ops.ane.rename_from_socket()
         ANE.SelectionTypeRename = last
-        return {'FINISHED'}
+        
+        wm = context.window_manager
+        self._timer = wm.event_timer_add(0, window=context.window)
+        wm.modal_handler_add(self)
+        self.skip = True
+        return {'RUNNING_MODAL'}
 classes.append(ANE_OT_ExtractNodeValues)
 
 class ANE_OT_TransferGroupInputValue(Operator):
