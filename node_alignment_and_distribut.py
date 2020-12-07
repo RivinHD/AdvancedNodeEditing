@@ -15,7 +15,6 @@ class ANE_PT_AligmentAndDistribut(Panel):
 
     def draw(self, context):
         layout = self.layout
-        nodes = context.space_data.edit_tree.nodes
         ANE = context.preferences.addons[__package__].preferences
         if ANE.AutoUpdate and ANE.Update:
             box = layout.box()
@@ -28,10 +27,12 @@ class ANE_PT_AligmentAndDistribut(Panel):
         col.label(text= 'Active: ')
         box = row.box()
         box.scale_x = 1.6
-        if nodes.active != None:
-            box.label(text= nodes.active.name if nodes.active.label == '' else nodes.active.label)
-        else:
-            box.label(text= "")
+        if context.space_data.edit_tree == None:
+            nodes = context.space_data.edit_tree.nodes
+            if nodes.active != None:
+                box.label(text= nodes.active.name if nodes.active.label == '' else nodes.active.label)
+            else:
+                box.label(text= "")
         row = layout.row()
         box = layout.box()
         row = box.row()
