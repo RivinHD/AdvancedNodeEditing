@@ -40,7 +40,7 @@ class ANE_PT_Formating(Panel):
         layout.operator(ANE_OT_SimplifyGroup.bl_idname, text= "Simplify Group")
         layout.operator(ANE_OT_ReplaceWithActive.bl_idname, text= "Replace with Active")
         obj = context.object
-        if obj != None and obj.active_material != None:
+        if obj != None and obj.active_material != None and hasattr(context.space_data, 'edit_tree'):
             active = context.space_data.edit_tree.nodes.active
             if active != None:
                 layout.prop(active, 'width')
@@ -58,7 +58,7 @@ class ANE_OT_SetMain(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material != None and context.space_data.edit_tree.nodes.active != None
+        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree.nodes.active != None
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
@@ -84,7 +84,7 @@ class ANE_OT_RenameFromSocket(Operator):
     @classmethod
     def poll(cls, context):
         ANE = context.preferences.addons[__package__].preferences
-        return ANE.MainNode != "" and context.object != None and context.object.active_material != None
+        return ANE.MainNode != "" and context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree')
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
@@ -125,7 +125,7 @@ class ANE_OT_SortBySocket(Operator):
     @classmethod
     def poll(cls, context):
         ANE = context.preferences.addons[__package__].preferences
-        return ANE.MainNode != "" and context.object != None and context.object.active_material != None
+        return ANE.MainNode != "" and context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree')
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
@@ -163,7 +163,7 @@ class ANE_OT_SimplifyGroup(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.object == None or context.object.active_material == None:
+        if context.object == None or context.object.active_material == None or not hasattr(context.space_data, 'edit_tree'):
             return False
         active = context.space_data.edit_tree.nodes.active
         return active != None and active.type == 'GROUP'
@@ -226,7 +226,7 @@ class ANE_OT_ReplaceWithActive(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material != None and context.space_data.edit_tree.nodes.active != None
+        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree.nodes.active != None
 
     def execute(self, context):
         node_tree = context.space_data.edit_tree

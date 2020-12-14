@@ -104,7 +104,7 @@ class ANE_OT_CheckUpdate(Operator):
 classes.append(ANE_OT_CheckUpdate)
 
 class ANE_OT_Update(Operator):
-    bl_idname = "ar.update"
+    bl_idname = "ane.update"
     bl_label = "Update"
     bl_description = "install the new version"
 

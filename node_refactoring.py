@@ -29,7 +29,7 @@ class ANE_OT_SetFallbackNode(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material != None and context.space_data.edit_tree.nodes.active != None
+        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree.nodes.active != None
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
@@ -51,7 +51,7 @@ class ANE_OT_ExtractNodeValues(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material != None and context.space_data.edit_tree.nodes.active != None
+        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree.nodes.active != None
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
@@ -183,7 +183,7 @@ class ANE_OT_TransferGroupInputValue(Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.object == None or context.object.active_material == None:
+        if context.object == None or context.object.active_material == None or not hasattr(context.space_data, 'edit_tree'):
             return False
         active = context.space_data.edit_tree.nodes.active
         return active != None and active.type == 'GROUP'

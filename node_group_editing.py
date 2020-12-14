@@ -2,6 +2,7 @@ import bpy
 from bpy.types import Operator, Panel, UIList
 from bpy.props import EnumProperty
 from . import functions as fc
+import time
 
 classes = []
 
@@ -14,7 +15,7 @@ class ANE_PT_AdvancedEdit(Panel):
 
     @classmethod
     def poll(cls, context):
-        if not bpy.ops.node.tree_path_parent.poll():
+        if not bpy.ops.node.tree_path_parent.poll() or not hasattr(context.space_data, 'edit_tree'):
             return False
         active = fc.getNodeOfTree(context.object.active_material, context.space_data.edit_tree)
         return active.type == 'GROUP' and bpy.ops.node.tree_path_parent.poll() and (active.node_tree.active_output != -1 or active.node_tree.active_input != -1)
@@ -28,6 +29,7 @@ class ANE_PT_AdvancedEdit(Panel):
         col = row.column(align= True)
         col.scale_x = 3
         col.prop(ANE, 'NodeSockets', text= "Socket")
+        col.template_modifiers()
         row.operator(ANE_OT_GetTypeOfSelected.bl_idname, text= '', icon= 'EYEDROPPER')
         layout.operator(ANE_OT_Apply.bl_idname, text= 'Apply')
 classes.append(ANE_PT_AdvancedEdit)
@@ -39,7 +41,7 @@ class ANE_OT_GetTypeOfSelected(Operator):
 
     @classmethod
     def poll(cls, context):
-        if not bpy.ops.node.tree_path_parent.poll():
+        if not bpy.ops.node.tree_path_parent.poll() or not hasattr(context.space_data, 'edit_tree'):
             return False
         active = fc.getNodeOfTree(context.object.active_material, context.space_data.edit_tree)
         return active.type == 'GROUP' and bpy.ops.node.tree_path_parent.poll() and (active.node_tree.active_output != -1 or active.node_tree.active_input != -1)
@@ -60,7 +62,7 @@ class ANE_OT_Apply(Operator):
 
     @classmethod
     def poll(cls, context):
-        if not bpy.ops.node.tree_path_parent.poll():
+        if not bpy.ops.node.tree_path_parent.poll() or not hasattr(context.space_data, 'edit_tree'):
             return False
         active = fc.getNodeOfTree(context.object.active_material, context.space_data.edit_tree)
         return active.type == 'GROUP' and bpy.ops.node.tree_path_parent.poll() and (active.node_tree.active_output != -1 or active.node_tree.active_input != -1)
@@ -74,17 +76,22 @@ class ANE_OT_Apply(Operator):
 
         #Copy Data
         new = socket.new(socketType, port.name)
-        default = eval("bpy.types." + socketType + ".bl_rna.properties['default_value']")
+        pops = eval("bpy.types." + socketType + ".bl_rna.properties")
+        if props.find('default_value') != -1:
+            default = props['default_value']
+        else:
+            default = None
         try:
             if port.is_output:
                 activeNode.outputs[-1].default_value = activeNode.outputs[index].default_value
             else:
                 activeNode.inputs[-1].default_value = activeNode.inputs[index].default_value
         except:
-            if default.is_array:
-                new.default_value = default.default_array
-            else:
-                new.default_value = default.default
+            if default != None:
+                if default.is_array:
+                    new.default_value = default.default_array
+                else:
+                    new.default_value = default.default
         try:
             new.min_value = port.min_value
             new.max_value = port.max_value
