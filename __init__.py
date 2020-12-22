@@ -9,7 +9,7 @@ bl_info = {
     "author" : "Rivin",
     "description" : "Allows you to format, align, edit your Nodes easily",
     "blender" : (2, 80, 9),
-    "version" : (0, 0, 16),
+    "version" : (0, 0, 17),
     "location" : "Node > UI",
     "category" : "Node"
 }
@@ -69,7 +69,7 @@ class ANE_Prop(AddonPreferences):
         else:
             row.operator(update.ANE_OT_CheckUpdate.bl_idname, text= "Check For Updates")
             if ANE.Restart:
-                row.operator(update.AR_OT_Restart.bl_idname, text= "Restart to Finsih")
+                row.operator(update.ANE_OT_Restart.bl_idname, text= "Restart to Finsih")
         if ANE.Version != '':
             if ANE.Update:
                 col.label(text= "A new Version is available (" + ANE.Version + ")")
