@@ -274,12 +274,9 @@ class ANE_OT_Ungroup(Operator):
         for node in input_nodes:
             newloc = left_group_node_loc + self.nodes_input[node.name]
             offset = newloc - node.location[0]
-            print(node, left_group_node_loc, self.nodes_input[node.name], newloc)
             node.location[0] = newloc
             for subnode in fc.getSubNodes(node, 'input'):
                 subnode.location[0] += offset
-                print(subnode, subnode.location[0], offset)
-            print(node.location[0])
             i += 1
         right_group_node_loc = fc.sortByLocation(fc.getSelected(nodes), 0, True)[0].location[0]
         output_nodes = fc.getNodebyNameList(self.nodes_output.keys(), nodes)
@@ -287,12 +284,9 @@ class ANE_OT_Ungroup(Operator):
         for node in output_nodes:
             newloc = right_group_node_loc + self.nodes_output[node.name]
             offset = newloc - node.location[0]
-            print(node, right_group_node_loc, self.nodes_output[node.name], newloc)
             node.location[0] = newloc
             for subnode in fc.getSubNodes(node, 'output'):
                 subnode.location[0] += offset
-                print(subnode, subnode.location[0], offset)
-            print(node.location[0])
             i += 1
         return {"FINISHED"}
 

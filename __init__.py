@@ -9,7 +9,7 @@ bl_info = {
     "author" : "Rivin",
     "description" : "Allows you to format, align, edit your Nodes easily",
     "blender" : (2, 80, 9),
-    "version" : (0, 0, 18),
+    "version" : (0, 0, 19),
     "location" : "Node > UI",
     "category" : "Node"
 }
@@ -70,6 +70,8 @@ class ANE_Prop(AddonPreferences):
         self['node_width'] = value
     node_width : FloatProperty(name= 'width', description= 'changes the width of the active Node', step= 1000, get=get_node_width, set=set_node_width)
 
+    addon_keymaps = []
+
     def draw(self, context):
         ANE = bpy.context.preferences.addons[__package__].preferences
         layout = self.layout
@@ -103,6 +105,11 @@ def register():
     for cls in update.classes:
         bpy.utils.register_class(cls)
     update.register()
+    #keymap
+    if bpy.context.window_manager.keyconfigs.addon:
+        km = bpy.context.window_manager.keyconfigs.addon.keymaps.new(name='Node Editor', space_type= 'NODE_EDITOR')
+        ANE_Prop.addon_keymaps.append(km)
+        kmi = km.keymap_items.new(node_formatting.ANE_OT_Ungroup.bl_idname, 'G', 'PRESS', ctrl=False, alt=True, shift=False)
     print("----- Registered Advanced Node Editing -----")
 
 def unregister():
@@ -119,6 +126,9 @@ def unregister():
     for cls in update.classes:
         bpy.utils.unregister_class(cls)
     update.unregister()
+    #keymap 
+    bpy.context.window_manager.keyconfigs.addon.keymaps.remove(ANE_Prop.addon_keymaps[0])
+    ANE_Prop.addon_keymaps.clear() #Unregister Preview Collection
     print("----- Unregistered Advanced Node Editing -----")
 
 if __name__ == "__main__":
