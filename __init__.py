@@ -9,7 +9,7 @@ bl_info = {
     "author" : "Rivin",
     "description" : "Allows you to format, align, edit your Nodes easily",
     "blender" : (2, 80, 9),
-    "version" : (0, 0, 17),
+    "version" : (0, 0, 18),
     "location" : "Node > UI",
     "category" : "Node"
 }
@@ -57,6 +57,18 @@ class ANE_Prop(AddonPreferences):
     Version : StringProperty()
     Restart : BoolProperty()
     AutoUpdate : BoolProperty(default= True, name= "Auto Update", description= "automatically search for a new Update")
+
+    
+    def get_node_width(self):
+        width = bpy.context.space_data.edit_tree.nodes.active.width
+        if self == width:
+            return self['node_width']
+        else:
+            return width
+    def set_node_width(self, value):
+        bpy.context.space_data.edit_tree.nodes.active.width = value
+        self['node_width'] = value
+    node_width : FloatProperty(name= 'width', description= 'changes the width of the active Node', step= 1000, get=get_node_width, set=set_node_width)
 
     def draw(self, context):
         ANE = bpy.context.preferences.addons[__package__].preferences

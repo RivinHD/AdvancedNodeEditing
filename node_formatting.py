@@ -1,6 +1,7 @@
 import bpy
 from bpy.types import Operator, Panel
 from . import functions as fc
+from bpy.props import FloatProperty
 
 classes = []
 
@@ -38,16 +39,13 @@ class ANE_PT_Formating(Panel):
         row.prop(ANE, 'SelectionTypeSort', text="")
         layout.separator(factor= 0.5) #------------------
         layout.operator(ANE_OT_SimplifyGroup.bl_idname, text= "Simplify Group")
-        layout.operator(ANE_OT_ReplaceWithActive.bl_idname, text= "Replace with Active")
-        obj = context.object
+        layout.operator(ANE_OT_Ungroup.bl_idname, text= 'Advanced Ungroup')
+        layout.operator(ANE_OT_ReplaceWithActive.bl_idname, text= "Replace with Active")   
+        obj = context.object  
         if obj != None and obj.active_material != None and hasattr(context.space_data, 'edit_tree'):
             active = context.space_data.edit_tree.nodes.active
             if active != None:
-                layout.prop(active, 'width')
-            else:
-                layout.label(text= "")     
-        else:
-            layout.label(text= "")        
+                layout.prop(ANE, 'node_width')
 classes.append(ANE_PT_Formating)
 
 class ANE_OT_SetMain(Operator):
@@ -155,7 +153,7 @@ class ANE_OT_SortBySocket(Operator):
             return {"CANCELLED"}
 classes.append(ANE_OT_SortBySocket)
 
-class ANE_OT_SimplifyGroup(bpy.types.Operator):
+class ANE_OT_SimplifyGroup(Operator):
     bl_idname = "ane.simplify_group"
     bl_label = "Simplify Group"
     bl_description = "Simplify the group I/O by deleting socket that has the same input/output-socket or are unused"
@@ -218,7 +216,7 @@ class ANE_OT_SimplifyGroup(bpy.types.Operator):
         return {"FINISHED"}
 classes.append(ANE_OT_SimplifyGroup)
 
-class ANE_OT_ReplaceWithActive(bpy.types.Operator):
+class ANE_OT_ReplaceWithActive(Operator):
     bl_idname = "ane.replace_with_active"
     bl_label = "Replace with Active"
     bl_description = "Description that shows in blender tooltips"
@@ -248,3 +246,86 @@ class ANE_OT_ReplaceWithActive(bpy.types.Operator):
             nodes.remove(node)
         return {"FINISHED"}
 classes.append(ANE_OT_ReplaceWithActive)
+
+class ANE_OT_Ungroup(Operator):
+    bl_idname = "ane.ungroup"
+    bl_label = "Advanced Ungroup"
+    bl_description = "Ungroups the selected group and move I/O-nodes relative to the ungrouped nodes"
+    bl_options = {"REGISTER"}
+
+    nodes_input = {}
+    nodes_output = {}
+    old_loc_x = 0
+    skip = False
+
+    @classmethod
+    def poll(cls, context):
+        if context.object == None or context.object.active_material == None or not hasattr(context.space_data, 'edit_tree'):
+            return False
+        active = context.space_data.edit_tree.nodes.active
+        return active != None and active.type == 'GROUP'
+
+    def execute(self, context):
+        # distribute I/O nodes
+        nodes = context.space_data.edit_tree.nodes
+        left_group_node_loc = fc.sortByLocation(fc.getSelected(nodes), 0, False)[0].location[0]
+        input_nodes = fc.getNodebyNameList(self.nodes_input.keys(), nodes)
+        i = 0
+        for node in input_nodes:
+            newloc = left_group_node_loc + self.nodes_input[node.name]
+            offset = newloc - node.location[0]
+            print(node, left_group_node_loc, self.nodes_input[node.name], newloc)
+            node.location[0] = newloc
+            for subnode in fc.getSubNodes(node, 'input'):
+                subnode.location[0] += offset
+                print(subnode, subnode.location[0], offset)
+            print(node.location[0])
+            i += 1
+        right_group_node_loc = fc.sortByLocation(fc.getSelected(nodes), 0, True)[0].location[0]
+        output_nodes = fc.getNodebyNameList(self.nodes_output.keys(), nodes)
+        i = 0
+        for node in output_nodes:
+            newloc = right_group_node_loc + self.nodes_output[node.name]
+            offset = newloc - node.location[0]
+            print(node, right_group_node_loc, self.nodes_output[node.name], newloc)
+            node.location[0] = newloc
+            for subnode in fc.getSubNodes(node, 'output'):
+                subnode.location[0] += offset
+                print(subnode, subnode.location[0], offset)
+            print(node.location[0])
+            i += 1
+        return {"FINISHED"}
+
+    def modal(self, context, event):
+        if self.skip:
+            self.skip = False
+            return {'PASS_THROUGH'}
+        else:
+            return self.execute(context)
+
+    def invoke(self, context, event):
+        active = context.space_data.edit_tree.nodes.active
+        # save states 
+        selected_nodes = fc.getSelected(context.space_data.edit_tree.nodes, active.name)
+        for node in selected_nodes:
+            node.select = False
+        loc = active.location[0]
+        self.nodes_offset_input = []
+        for inp in active.inputs:
+            for link in inp.links:
+                node = link.from_node
+                self.nodes_input[node.name] = node.location[0] - loc
+        self.nodes_offset_output = []
+        for out in active.outputs:
+            for link in out.links:
+                node = link.to_node
+                self.nodes_output[node.name] = node.location[0] - loc
+        self.old_loc = active.location[0]
+        bpy.ops.node.group_ungroup()
+
+        wm = context.window_manager
+        self._timer = wm.event_timer_add(0, window=context.window)
+        wm.modal_handler_add(self)
+        self.skip = True
+        return {'RUNNING_MODAL'}
+classes.append(ANE_OT_Ungroup)

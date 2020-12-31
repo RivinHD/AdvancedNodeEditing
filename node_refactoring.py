@@ -60,21 +60,23 @@ class ANE_OT_ExtractNodeValues(Operator):
         offset = ANE.DistributOffset
         for node in fc.getSelected(nodes):
             node.select = False
-        if len(self.inputNodes):
-            for node in self.inputNodes:
+        inputNodes = fc.getNodebyNameList(self.inputNodes, nodes)
+        if len(inputNodes):
+            for node in inputNodes:
                 node.select = True
-            nodes.active = self.inputNodes[0]
+            nodes.active = inputNodes[0]
             ANE.DistributOffset = 0
-            bpy.ops.ane.distribute('INVOKE_DEFAULT', Pivot="Bottom")
-            for node in self.inputNodes:
+            bpy.ops.ane.distribute(context.copy(),'INVOKE_DEFAULT', False, Pivot="Bottom")
+            for node in inputNodes:
                 node.select = False
-        if len(self.outputNodes):
-            for node in self.outputNodes:
+        outputNodes = fc.getNodebyNameList(self.outputNodes, nodes)
+        if len(outputNodes):
+            for node in outputNodes:
                 node.select = True
-            nodes.active = self.outputNodes[0]
+            nodes.active = outputNodes[0]
             ANE.DistributOffset = 0
-            bpy.ops.ane.distribute('INVOKE_DEFAULT', Pivot="Bottom")
-            for node in self.outputNodes:
+            bpy.ops.ane.distribute(context.copy(),'INVOKE_DEFAULT', False, Pivot="Bottom")
+            for node in outputNodes:
                 node.select = False
         nodes.active = active
         ANE.DistributOffset = offset
@@ -134,6 +136,7 @@ class ANE_OT_ExtractNodeValues(Operator):
 
         newNodes = []
         # process inputs
+        self.inputNodes = []
         for i in range(len(active_node.inputs)):
             input = active_node.inputs[i]
             if input.bl_idname == 'NodeSocketVirtual':
@@ -146,12 +149,13 @@ class ANE_OT_ExtractNodeValues(Operator):
             y -= view_node.height
             output = view_node.outputs[0]
             connect(input, output)
-            self.inputNodes.append(view_node)
+            self.inputNodes.append(view_node.name)
 
         x, y = active_node.location
         x += active_node.width + offset_x
 
         # process outputs
+        self.outputNodes = []
         for i in range(len(active_node.outputs)):
             output = active_node.outputs[i]
             if output.bl_idname == 'NodeSocketVirtual':
@@ -163,12 +167,13 @@ class ANE_OT_ExtractNodeValues(Operator):
             y -= view_node.height
             input = view_node.inputs[0]
             auto_connect_to_input(output, view_node)
-            self.outputNodes.append(view_node)
+            self.outputNodes.append(view_node.name)
             # connect(input, output)
         last = ANE.SelectionTypeRename
         ANE.SelectionTypeRename = 'A'
         bpy.ops.ane.rename_from_socket()
         ANE.SelectionTypeRename = last
+        context.space_data.edit_tree.nodes.active = active_node
         
         wm = context.window_manager
         self._timer = wm.event_timer_add(0, window=context.window)

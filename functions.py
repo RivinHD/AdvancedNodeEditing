@@ -176,3 +176,26 @@ def copyData(dataObj, obj):
         obj.inputs[nIn.identifier].default_value = nIn.default_value
     for nOut in dataObj.outputs:
         obj.outputs[nOut.identifier].default_value = nOut.default_value
+
+def getSubNodes(main, direction):
+    nodes = []
+    if direction ==  'input':
+        for inp in main.inputs:
+            for link in inp.links:
+                node = link.from_node
+                nodes.append(node)
+                nodes.extend(getSubNodes(node, 'input'))
+    if direction == 'output':
+        for out in main.outputs:
+            for link in out.links:
+                node = link.to_node
+                nodes.append(node)
+                nodes.extend(getSubNodes(node, 'output'))
+    return nodes
+
+def getNodebyNameList(name_list, nodes):
+    l = []
+    for node in nodes:
+        if node.name in name_list:
+            l.append(node)
+    return l
