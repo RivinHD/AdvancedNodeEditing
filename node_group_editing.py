@@ -1,8 +1,6 @@
 import bpy
-from bpy.types import Operator, Panel, UIList
-from bpy.props import EnumProperty
+from bpy.types import Operator, Panel
 from . import functions as fc
-import time
 
 classes = []
 
@@ -24,7 +22,6 @@ class ANE_PT_AdvancedEdit(Panel):
         layout = self.layout
         ANE = context.preferences.addons[__package__].preferences
         activeNode = fc.getNodeOfTree(context.object.active_material, context.space_data.edit_tree)
-        active = activeNode.node_tree
         row = layout.row(align= True)
         col = row.column(align= True)
         col.scale_x = 3
@@ -75,7 +72,7 @@ class ANE_OT_Apply(Operator):
 
         #Copy Data
         new = socket.new(socketType, port.name)
-        pops = eval("bpy.types." + socketType + ".bl_rna.properties")
+        props = eval("bpy.types." + socketType + ".bl_rna.properties")
         if props.find('default_value') != -1:
             default = props['default_value']
         else:
