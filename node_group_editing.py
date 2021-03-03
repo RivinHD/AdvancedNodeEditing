@@ -29,7 +29,6 @@ class ANE_PT_AdvancedEdit(Panel):
         col = row.column(align= True)
         col.scale_x = 3
         col.prop(ANE, 'NodeSockets', text= "Socket")
-        col.template_modifiers()
         row.operator(ANE_OT_GetTypeOfSelected.bl_idname, text= '', icon= 'EYEDROPPER')
         layout.operator(ANE_OT_Apply.bl_idname, text= 'Apply')
 classes.append(ANE_PT_AdvancedEdit)
