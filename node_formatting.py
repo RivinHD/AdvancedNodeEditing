@@ -45,8 +45,73 @@ class ANE_PT_Formating(Panel):
         if obj != None and obj.active_material != None and hasattr(context.space_data, 'edit_tree'):
             active = context.space_data.edit_tree.nodes.active
             if active != None:
-                layout.prop(ANE, 'node_width')
+                col = layout.column(align= True)
+                row = col.row()
+                row.operator(ANE_OT_Apply_NodeWidth.bl_idname, text="", icon="CHECKMARK")
+                row.prop(ANE, 'node_width')
+                row.prop(ANE, 'node_width_edit_active', text= "", icon= "GREASEPENCIL")
+                if ANE.node_width_edit_active:
+                    col.operator(ANE_OT_Add_NodeWidthItem.bl_idname, text= "", icon="ADD")
+                    row = layout.row()
+                    row.prop(ANE, 'node_width_edit')
+                    row.operator(ANE_OT_Delete_NodeWidthItem.bl_idname, text="", icon="X")
 classes.append(ANE_PT_Formating)
+
+class ANE_OT_Add_NodeWidthItem(Operator):
+    bl_idname = "ane.add_nodewidthitem"
+    bl_label = "Add Width"
+    bl_description = "Adds a new width Item"
+    bl_options = {"REGISTER"}
+
+    @classmethod
+    def poll(cls, context):
+        ANE = context.preferences.addons[__package__].preferences
+        return ANE.node_width_edit_active
+
+    def execute(self, context):
+        ANE = context.preferences.addons[__package__].preferences
+        ANE.node_width_items = "a100"
+        ANE['node_width'] = len(ANE.node_width) - 1
+        return {"FINISHED"}
+classes.append(ANE_OT_Add_NodeWidthItem)
+
+class ANE_OT_Delete_NodeWidthItem(Operator):
+    bl_idname = "ane.delete_nodewidthitem"
+    bl_label = "Delete Width"
+    bl_description = "Deletes the selected width Item"
+    bl_options = {"REGISTER"}
+
+    @classmethod
+    def poll(cls, context):
+        ANE = context.preferences.addons[__package__].preferences
+        return len(ANE.node_width) - 1 and ANE.node_width_edit_active
+
+    def execute(self, context):
+        ANE = context.preferences.addons[__package__].preferences
+        ANE.node_width_items = "d%s" % ANE['node_width']
+        ANE['node_width'] = 0
+        return {"FINISHED"}
+classes.append(ANE_OT_Delete_NodeWidthItem)
+
+class ANE_OT_Apply_NodeWidth(Operator):
+    bl_idname = "ane.apply_nodewith"
+    bl_label = "Apply Width"
+    bl_description = "Apply the selected Width"
+    bl_options = {"REGISTER"}
+
+    @classmethod
+    def poll(cls, context):
+        ANE = context.preferences.addons[__package__].preferences
+        return len(ANE.node_width) - 1
+
+    def execute(self, context):
+        ANE = context.preferences.addons[__package__].preferences
+        width = ANE.node_width
+        for node in context.space_data.edit_tree.nodes:
+            if node.select:
+                node.width = int(width.split("-")[1])
+        return {"FINISHED"}
+classes.append(ANE_OT_Apply_NodeWidth)
 
 class ANE_OT_SetMain(Operator):
     bl_idname = "ane.set_main"

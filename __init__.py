@@ -1,15 +1,16 @@
 import bpy
 import numpy
-from bpy.types import Panel, Operator, AddonPreferences
-from bpy.props import EnumProperty, StringProperty, FloatProperty, BoolProperty
+from bpy.types import CollectionProperty, Panel, Operator, AddonPreferences, PropertyGroup
+from bpy.props import EnumProperty, IntProperty, StringProperty, FloatProperty, BoolProperty
 from . import node_formatting, node_alignment_and_distribut, node_group_editing, node_refactoring, update
+import json
 
 bl_info = {
     "name" : "Advanced Node Editing",
     "author" : "Rivin",
     "description" : "Allows you to format, align, edit your Nodes easily",
     "blender" : (2, 80, 9),
-    "version" : (0, 0, 21),
+    "version" : (0, 0, 22),
     "location" : "Node > UI",
     "category" : "Node"
 }
@@ -58,17 +59,35 @@ class ANE_Prop(AddonPreferences):
     Restart : BoolProperty()
     AutoUpdate : BoolProperty(default= True, name= "Auto Update", description= "automatically search for a new Update")
 
-    
-    def get_node_width(self):
-        width = bpy.context.space_data.edit_tree.nodes.active.width
-        if self == width:
-            return self['node_width']
+    def get_node_width_items(self):
+        return self.get("node_width_items", "[140, 190, 240]")
+    def set_node_width_items(self, value):
+        data = json.loads(self.get("node_width_items", "[140, 190, 240]"))
+        if value[0] == 'd':
+            data.pop(int(value[1:]))
+        elif value[0] == 'a':
+            data.append(int(value[1:]))
         else:
-            return width
-    def set_node_width(self, value):
-        bpy.context.space_data.edit_tree.nodes.active.width = value
-        self['node_width'] = value
-    node_width : FloatProperty(name= 'width', description= 'changes the width of the active Node', step= 1000, get=get_node_width, set=set_node_width)
+            data[self['node_width']] = value
+        self["node_width_items"] = json.dumps(data)
+    node_width_items : StringProperty(name="width items", default="[140, 190, 240]", set=set_node_width_items, get=get_node_width_items)
+    def get_node_width_edit(self):
+        if self.node_width == "":
+            return 0
+        return int(self.node_width.split("-")[1])
+    def set_node_width_edit(self, value):
+        self.node_width_items = str(value)
+    node_width_edit : IntProperty(name= "width edit", get=get_node_width_edit, set=set_node_width_edit, step=10)
+    node_width_edit_active : BoolProperty(name= "Activate Edit", description= "Allows to edit the select width item")
+    def item_node_width(self, context):
+        l = []
+        i = 0
+        data = json.loads(self.node_width_items)
+        for item in data:
+            l.append((str(i)+ "-" + str(item), str(item), "", "", i))
+            i += 1
+        return l
+    node_width : EnumProperty(name= 'width', description= 'changes the width of the active Node', items=item_node_width)
 
     addon_keymaps = []
 
