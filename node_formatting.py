@@ -2,6 +2,7 @@ import bpy
 from bpy.types import Operator, Panel
 from . import functions as fc
 from bpy.props import FloatProperty
+import json
 
 classes = []
 
@@ -40,21 +41,12 @@ class ANE_PT_Formating(Panel):
         layout.separator(factor= 0.5) #------------------
         layout.operator(ANE_OT_SimplifyGroup.bl_idname, text= "Simplify Group")
         layout.operator(ANE_OT_Ungroup.bl_idname, text= 'Advanced Ungroup')
-        layout.operator(ANE_OT_ReplaceWithActive.bl_idname, text= "Replace with Active")   
-        obj = context.object  
-        if obj != None and obj.active_material != None and hasattr(context.space_data, 'edit_tree'):
-            active = context.space_data.edit_tree.nodes.active
-            if active != None:
-                col = layout.column(align= True)
-                row = col.row()
-                row.operator(ANE_OT_Apply_NodeWidth.bl_idname, text="", icon="CHECKMARK")
-                row.prop(ANE, 'node_width')
-                row.prop(ANE, 'node_width_edit_active', text= "", icon= "GREASEPENCIL")
-                if ANE.node_width_edit_active:
-                    col.operator(ANE_OT_Add_NodeWidthItem.bl_idname, text= "", icon="ADD")
-                    row = layout.row()
-                    row.prop(ANE, 'node_width_edit')
-                    row.operator(ANE_OT_Delete_NodeWidthItem.bl_idname, text="", icon="X")
+        layout.operator(ANE_OT_ReplaceWithActive.bl_idname, text= "Replace with Active")
+        col = layout.column(align= True)
+        row = col.row()
+        row.operator(ANE_OT_Apply_NodeWidth.bl_idname, text="", icon="CHECKMARK")
+        row.label(text= 'Node Width')
+        row.prop(ANE, 'node_width', text= "")
 classes.append(ANE_PT_Formating)
 
 class ANE_OT_Add_NodeWidthItem(Operator):
@@ -63,15 +55,10 @@ class ANE_OT_Add_NodeWidthItem(Operator):
     bl_description = "Adds a new width Item"
     bl_options = {"REGISTER"}
 
-    @classmethod
-    def poll(cls, context):
-        ANE = context.preferences.addons[__package__].preferences
-        return ANE.node_width_edit_active
-
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
         ANE.node_width_items = "a100"
-        ANE['node_width'] = len(ANE.node_width) - 1
+        ANE['node_width'] = len(json.loads(ANE.node_width_items)) - 1
         return {"FINISHED"}
 classes.append(ANE_OT_Add_NodeWidthItem)
 
@@ -84,7 +71,7 @@ class ANE_OT_Delete_NodeWidthItem(Operator):
     @classmethod
     def poll(cls, context):
         ANE = context.preferences.addons[__package__].preferences
-        return len(ANE.node_width) - 1 and ANE.node_width_edit_active
+        return len(ANE.node_width) - 1
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
@@ -102,7 +89,7 @@ class ANE_OT_Apply_NodeWidth(Operator):
     @classmethod
     def poll(cls, context):
         ANE = context.preferences.addons[__package__].preferences
-        return len(ANE.node_width) - 1
+        return len(ANE.node_width) - 1 and context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None and context.space_data.edit_tree.nodes.active != None
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
@@ -121,7 +108,7 @@ class ANE_OT_SetMain(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree.nodes.active != None
+        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None and context.space_data.edit_tree.nodes.active != None
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
@@ -289,7 +276,7 @@ class ANE_OT_ReplaceWithActive(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree.nodes.active != None
+        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None and context.space_data.edit_tree.nodes.active != None
 
     def execute(self, context):
         node_tree = context.space_data.edit_tree

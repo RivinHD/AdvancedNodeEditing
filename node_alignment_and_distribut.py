@@ -108,7 +108,7 @@ class ANE_OT_ALign(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree.nodes.active != None
+        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None and context.space_data.edit_tree.nodes.active != None
 
     def execute(self, context):
         nodes = context.space_data.edit_tree.nodes
@@ -146,7 +146,7 @@ class ANE_OT_Distribute(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree.nodes.active != None
+        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None and context.space_data.edit_tree.nodes.active != None
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences

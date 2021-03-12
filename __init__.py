@@ -10,7 +10,7 @@ bl_info = {
     "author" : "Rivin",
     "description" : "Allows you to format, align, edit your Nodes easily",
     "blender" : (2, 80, 9),
-    "version" : (0, 0, 22),
+    "version" : (0, 0, 23),
     "location" : "Node > UI",
     "category" : "Node"
 }
@@ -51,8 +51,34 @@ class ANE_Prop(AddonPreferences):
                     ('NodeSocketShader', 'Shader', ''),
                     ('NodeSocketObject', 'Object', 'type Object')]
     NodeSockets : EnumProperty(items= SocketItems, name='Sockets', description='All available Sockets for a Node')
-    Fallback : StringProperty(name= "Fallback Node", default= "ShaderNodeEmission")
-    FallbackName : StringProperty(name= "Fallback Node", default= "Emission")
+
+    def get_fallback_node_items(self):
+        return self.get("fallback_node_items", '[{"name": "None", "node": "None"}]')
+    def set_fallback_node_items(self, value):
+        data = json.loads(self.get("fallback_node_items", '[{"name": "None", "node": "None"}]'))
+        if value[0] == 'd':
+            data.pop(int(value[1:]))
+        elif value[0] == 'a':
+            data.append(json.loads(value[1:]))
+        else:
+            data[self['fallback_node']] = value
+        self["fallback_node_items"] = json.dumps(data)
+    fallback_node_items : StringProperty(name="Fallback Node Items", default='[{"name": "None", "node": "None"}]', set=set_fallback_node_items, get=get_fallback_node_items)
+    def item_fallback_node(self, context):
+        l = []
+        i = 0
+        data = json.loads(self.fallback_node_items)
+        for item in data:
+            l.append((str(i) + "-" + str(item['node']) + "-" + str(item['name']), str(item['name']), "", "", i))
+            i += 1
+        return l
+    fallback_node : EnumProperty(name= 'Fallback Node', description= "used if I/O hasn't an assigned node", items=item_fallback_node)
+    def get_fallback(self):
+        return self.fallback_node.split("-")[1]
+    Fallback : StringProperty(name= 'Fallback Node', get=get_fallback)
+    def get_fallbackname(self):
+        return self.fallback_node.split("-")[2]
+    FallbackName : StringProperty(name= 'Fallback Node', get=get_fallbackname)
     
     Update : BoolProperty()
     Version : StringProperty()
@@ -78,7 +104,6 @@ class ANE_Prop(AddonPreferences):
     def set_node_width_edit(self, value):
         self.node_width_items = str(value)
     node_width_edit : IntProperty(name= "width edit", get=get_node_width_edit, set=set_node_width_edit, step=10)
-    node_width_edit_active : BoolProperty(name= "Activate Edit", description= "Allows to edit the select width item")
     def item_node_width(self, context):
         l = []
         i = 0
@@ -87,7 +112,7 @@ class ANE_Prop(AddonPreferences):
             l.append((str(i)+ "-" + str(item), str(item), "", "", i))
             i += 1
         return l
-    node_width : EnumProperty(name= 'width', description= 'changes the width of the active Node', items=item_node_width)
+    node_width : EnumProperty(name= 'Node Width', description= 'changes the width of the active Node', items=item_node_width)
 
     addon_keymaps = []
 
@@ -108,6 +133,20 @@ class ANE_Prop(AddonPreferences):
                 col.label(text= "A new Version is available (" + ANE.Version + ")")
             else:
                 col.label(text= "You are using the latest Vesion (" + ANE.Version + ")")
+        # Edit Node_Width List
+        col.separator()
+        row = col.row()
+        row.prop(ANE, 'node_width')
+        row = col.row()
+        row.prop(ANE, 'node_width_edit')
+        row.operator(node_formatting.ANE_OT_Add_NodeWidthItem.bl_idname, text= "", icon="ADD")
+        row.operator(node_formatting.ANE_OT_Delete_NodeWidthItem.bl_idname, text="", icon="X")
+        # Edit Fallback_Node List
+        col.separator()
+        row = col.row()
+        row.prop(ANE, 'fallback_node')
+        row.operator(node_refactoring.ANE_OT_Add_FallbackNodeItem.bl_idname, text= "", icon="ADD")
+        row.operator(node_refactoring.ANE_OT_Delete_FallbackNodeItem.bl_idname, text="", icon="X")
 classes.append(ANE_Prop)
 
 def register():

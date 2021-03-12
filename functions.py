@@ -124,7 +124,7 @@ def find_node_input(nodes):
             return node
     raise ValueError("No NodeGroupInput.")
 
-def get_terminal_to_sockets(to_socket) -> []:
+def get_terminal_to_sockets(to_socket):
     if to_socket.node.bl_idname != "NodeReroute":
         return [to_socket]
     to_sockets = []

@@ -1,3 +1,4 @@
+import json
 import bpy
 from bpy.types import Operator, Panel
 from . import functions as fc
@@ -17,31 +18,60 @@ class ANE_PT_NodeRefactoring(Panel):
         layout.operator(ANE_OT_TransferGroupInputValue.bl_idname)
         layout.operator(ANE_OT_ExtractNodeValues.bl_idname)
         col = layout.column(align= True)
-        col.prop(ANE, 'FallbackName')
-        col.operator(ANE_OT_SetFallbackNode.bl_idname)
+        row = col.row()
+        row.label(text= "Fallback Node")
+        row.prop(ANE, 'fallback_node', text= "")
 classes.append(ANE_PT_NodeRefactoring)
 
-class ANE_OT_SetFallbackNode(bpy.types.Operator):
-    bl_idname = "ane.set_fallback_node"
-    bl_label = "Set Fallback Node"
-    bl_description = "Set the fallback Node. The fallnack Node is used, when no I/O Node could be addded"
+class ANE_OT_Add_FallbackNodeItem(Operator):
+    bl_idname = "ane.add_fallbacknodeitem"
+    bl_label = "Add Fallback Node Item"
+    bl_description = "Add a Fallback Node Item from the selected Node"
     bl_options = {"REGISTER"}
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree.nodes.active != None
+        ANE = context.preferences.addons[__package__].preferences
+        for area in context.window_manager.windows[0].screen.areas:
+            if area.type == 'NODE_EDITOR':
+                space_data = area.spaces[0]
+                break
+        else:
+            return False
+        return context.object != None and context.object.active_material != None and hasattr(space_data, 'edit_tree') and space_data.edit_tree != None and space_data.edit_tree.nodes.active != None
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
-        active = context.space_data.edit_tree.nodes.active
-        ANE.Fallback = active.bl_idname
-        ANE.FallbackName = active.bl_rna.name
+        for area in context.window_manager.windows[0].screen.areas:
+            if area.type == 'NODE_EDITOR':
+                active = area.spaces[0].edit_tree.nodes.active
+                break
+        ANE.fallback_node_items = 'a{"name": "' + active.bl_rna.name + '", "node": "' + active.bl_idname + '"}'
+        ANE['fallback_node'] = len(json.loads(ANE.fallback_node_items)) - 1
         return {"FINISHED"}
-classes.append(ANE_OT_SetFallbackNode)
+classes.append(ANE_OT_Add_FallbackNodeItem)
+
+class ANE_OT_Delete_FallbackNodeItem(Operator):
+    bl_idname = "ane.delete_fallbacknodeitem"
+    bl_label = "Delete Fallback Node Item"
+    bl_description = "Deletes the Fallback Node Item"
+    bl_options = {"REGISTER"}
+
+    @classmethod
+    def poll(cls, context):
+        ANE = context.preferences.addons[__package__].preferences
+        return len(ANE.fallback_node) - 1 and ANE['fallback_node'] != 0
+
+    def execute(self, context):
+        ANE = context.preferences.addons[__package__].preferences
+        ANE.fallback_node_items = "d%s" % ANE['fallback_node']
+        ANE['fallback_node'] = 0
+        return {"FINISHED"}
+classes.append(ANE_OT_Delete_FallbackNodeItem)
 
 class ANE_OT_ExtractNodeValues(Operator):
     bl_idname = "ane.extract_node_values"
-    bl_region_type = 'UI' #des Nキーのメニュー
+    bl_region_type = 'UI'
     bl_category = 'Item' 
     bl_label = "Extract Node Values"
 
@@ -51,7 +81,7 @@ class ANE_OT_ExtractNodeValues(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree.nodes.active != None
+        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None and context.space_data.edit_tree.nodes.active != None
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
@@ -104,6 +134,8 @@ class ANE_OT_ExtractNodeValues(Operator):
         def create_input_node(node_type):
             ANE = bpy.context.preferences.addons[__package__].preferences
             if node_type not in input_node_types:
+                if ANE.Fallback == 'None':
+                    return None
                 return nodes.new(ANE.Fallback)
             return nodes.new(input_node_types[node_type])
 
@@ -115,6 +147,8 @@ class ANE_OT_ExtractNodeValues(Operator):
         def create_output_node(node_type):
             ANE = bpy.context.preferences.addons[__package__].preferences
             if node_type not in output_node_types:
+                if ANE.Fallback == 'None':
+                    return None
                 return nodes.new(ANE.Fallback)
             return nodes.new(output_node_types[node_type])
 
@@ -142,6 +176,8 @@ class ANE_OT_ExtractNodeValues(Operator):
             if input.bl_idname == 'NodeSocketVirtual':
                 continue
             view_node = create_input_node(input.type)
+            if view_node is None:
+                continue
             if hasattr(input, "default_value"):
                 set_default_output(view_node, input.default_value)
             _x = x - (view_node.width + offset_x)
