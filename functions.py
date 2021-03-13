@@ -199,3 +199,11 @@ def getNodebyNameList(name_list, nodes):
         if node.name in name_list:
             l.append(node)
     return l
+
+
+def get_init_enum(self, name):
+    if not (name in self):
+        re = eval('self.' + name)
+        self[name] = 0
+        exec('self.' + name + "= re")
+    return self[name]

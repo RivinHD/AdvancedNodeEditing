@@ -4,13 +4,14 @@ from bpy.types import CollectionProperty, Panel, Operator, AddonPreferences, Pro
 from bpy.props import EnumProperty, IntProperty, StringProperty, FloatProperty, BoolProperty
 from . import node_formatting, node_alignment_and_distribut, node_group_editing, node_refactoring, update
 import json
+from . import functions as fc
 
 bl_info = {
     "name" : "Advanced Node Editing",
     "author" : "Rivin",
     "description" : "Allows you to format, align, edit your Nodes easily",
     "blender" : (2, 80, 9),
-    "version" : (0, 0, 23),
+    "version" : (0, 0, 24),
     "location" : "Node > UI",
     "category" : "Node"
 }
@@ -25,7 +26,35 @@ class ANE_Prop(AddonPreferences):
     selectionItems = [("I", "Inputs", ""), ("O", "Output", ""), ("A", "All", ""), ("S", "Selection", "")]
     SelectionTypeRename : EnumProperty(items= selectionItems, default= "A")
     SelectionTypeSort : EnumProperty(items= selectionItems, default= "A")
-    DistributOffset : FloatProperty(name= "Offset", default= 1)
+
+    def get_distribut_offset_items(self):
+        return self.get("distribut_offset_items", "[0, 20, 40]")
+    def set_distribut_offset_items(self, value):
+        data = json.loads(self.get("distribut_offset_items", "[0, 20, 40]"))
+        if value[0] == 'd':
+            data.pop(int(value[1:]))
+        elif value[0] == 'a':
+            data.append(int(value[1:]))
+        else:
+            data[fc.get_init_enum(self, 'distribut_offset')] = value
+        self["distribut_offset_items"] = json.dumps(data)
+    distribut_offset_items : StringProperty(name="offset items", default="[0, 20, 40]", set=set_distribut_offset_items, get=get_distribut_offset_items)
+    def get_distribut_offset_edit(self):
+        if self.distribut_offset == "":
+            return 0
+        return int(self.distribut_offset.split("-")[1])
+    def set_distribut_offset_edit(self, value):
+        self.distribut_offset_items = str(value)
+    distribut_offset_edit : IntProperty(name= "offset edit", get=get_distribut_offset_edit, set=set_distribut_offset_edit, step=10)
+    def item_distribut_offset(self, context):
+        l = []
+        i = 0
+        data = json.loads(self.distribut_offset_items)
+        for item in data:
+            l.append((str(i)+ "-" + str(item), str(item), "", "", i))
+            i += 1
+        return l
+    distribut_offset : EnumProperty(name= 'Offset', description= 'changes the width of the active Node', items=item_distribut_offset)
 
     SocketItems = [('NodeSocketBool','Bool','boolean'),
                     ('NodeSocketString', 'String', 'string'),
@@ -52,6 +81,7 @@ class ANE_Prop(AddonPreferences):
                     ('NodeSocketObject', 'Object', 'type Object')]
     NodeSockets : EnumProperty(items= SocketItems, name='Sockets', description='All available Sockets for a Node')
 
+
     def get_fallback_node_items(self):
         return self.get("fallback_node_items", '[{"name": "None", "node": "None"}]')
     def set_fallback_node_items(self, value):
@@ -61,7 +91,7 @@ class ANE_Prop(AddonPreferences):
         elif value[0] == 'a':
             data.append(json.loads(value[1:]))
         else:
-            data[self['fallback_node']] = value
+            data[fc.get_init_enum(self, 'fallback_node')] = value
         self["fallback_node_items"] = json.dumps(data)
     fallback_node_items : StringProperty(name="Fallback Node Items", default='[{"name": "None", "node": "None"}]', set=set_fallback_node_items, get=get_fallback_node_items)
     def item_fallback_node(self, context):
@@ -94,7 +124,7 @@ class ANE_Prop(AddonPreferences):
         elif value[0] == 'a':
             data.append(int(value[1:]))
         else:
-            data[self['node_width']] = value
+            data[fc.get_init_enum(self, 'node_width')] = value
         self["node_width_items"] = json.dumps(data)
     node_width_items : StringProperty(name="width items", default="[140, 190, 240]", set=set_node_width_items, get=get_node_width_items)
     def get_node_width_edit(self):
@@ -133,6 +163,14 @@ class ANE_Prop(AddonPreferences):
                 col.label(text= "A new Version is available (" + ANE.Version + ")")
             else:
                 col.label(text= "You are using the latest Vesion (" + ANE.Version + ")")
+        # Edit Distribut_Offset List
+        col.separator()
+        row = col.row()
+        row.prop(ANE, 'distribut_offset')
+        row = col.row()
+        row.prop(ANE, 'distribut_offset_edit')
+        row.operator(node_alignment_and_distribut.ANE_OT_Add_DistributOffsetItem.bl_idname, text= "", icon="ADD")
+        row.operator(node_alignment_and_distribut.ANE_OT_Delete_DistributOffsetItem.bl_idname, text="", icon="X")
         # Edit Node_Width List
         col.separator()
         row = col.row()

@@ -3,6 +3,7 @@ from bpy.types import Operator, Panel
 from bpy.props import EnumProperty
 from . import functions as fc
 from . import update
+import json
 
 classes = []
 
@@ -70,10 +71,8 @@ class ANE_PT_AligmentAndDistribut(Panel):
         row = box.row()
         row.separator(factor= 0.5)
         row = box.row()
-        row.label(text= "Distribut")
-        col = row.column()
-        col.scale_x = 1.3
-        col.prop(ANE, 'DistributOffset')
+        row.label(text= "Distribut Offset")
+        row.prop(ANE, 'distribut_offset', text= "")
         row = box.row()
         col = row.column()
         col.label(text= "Space")
@@ -91,6 +90,37 @@ class ANE_PT_AligmentAndDistribut(Panel):
         flow.label(text= "")
 
 classes.append(ANE_PT_AligmentAndDistribut)
+
+class ANE_OT_Add_DistributOffsetItem(Operator):
+    bl_idname = "ane.add_distributoffsetitem"
+    bl_label = "Add Offset"
+    bl_description = "Adds a new offset Item"
+    bl_options = {"REGISTER"}
+
+    def execute(self, context):
+        ANE = context.preferences.addons[__package__].preferences
+        ANE.distribut_offset_items = "a0"
+        ANE['distribut_offset'] = len(json.loads(ANE.distribut_offset_items)) - 1
+        return {"FINISHED"}
+classes.append(ANE_OT_Add_DistributOffsetItem)
+
+class ANE_OT_Delete_DistributOffsetItem(Operator):
+    bl_idname = "ane.delete_distributoffsetitem"
+    bl_label = "Delete Offset"
+    bl_description = "Deletes the selected offset Item"
+    bl_options = {"REGISTER"}
+
+    @classmethod
+    def poll(cls, context):
+        ANE = context.preferences.addons[__package__].preferences
+        return len(ANE.distribut_offset) - 1
+
+    def execute(self, context):
+        ANE = context.preferences.addons[__package__].preferences
+        ANE.distribut_offset_items = "d%s" % fc.get_init_enum(ANE, 'distribut_offset')
+        ANE['distribut_offset'] = 0
+        return {"FINISHED"}
+classes.append(ANE_OT_Delete_DistributOffsetItem)
 
 class ANE_OT_ALign(Operator):
     bl_idname = "ane.align"
@@ -152,7 +182,7 @@ class ANE_OT_Distribute(Operator):
         ANE = context.preferences.addons[__package__].preferences
         nodes = context.space_data.edit_tree.nodes
         if not (self.Pivot == "Vertical" or self.Pivot == "Horizontal"):
-            offset = ANE.DistributOffset
+            offset = int(ANE.distribut_offset.split('-')[1])
             active = nodes.active
             selected = fc.getSelected(nodes, active.name)
             if self.Pivot == 'Left':

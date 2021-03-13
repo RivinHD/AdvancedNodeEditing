@@ -60,11 +60,11 @@ class ANE_OT_Delete_FallbackNodeItem(Operator):
     @classmethod
     def poll(cls, context):
         ANE = context.preferences.addons[__package__].preferences
-        return len(ANE.fallback_node) - 1 and ANE['fallback_node'] != 0
+        return len(ANE.fallback_node) - 1 and fc.get_init_enum(ANE, 'fallback_node') != 0
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
-        ANE.fallback_node_items = "d%s" % ANE['fallback_node']
+        ANE.fallback_node_items = "d%s" % fc.get_init_enum(ANE, 'fallback_node')
         ANE['fallback_node'] = 0
         return {"FINISHED"}
 classes.append(ANE_OT_Delete_FallbackNodeItem)

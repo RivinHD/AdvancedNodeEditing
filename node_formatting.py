@@ -75,7 +75,7 @@ class ANE_OT_Delete_NodeWidthItem(Operator):
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
-        ANE.node_width_items = "d%s" % ANE['node_width']
+        ANE.node_width_items = "d%s" % fc.get_init_enum(ANE, 'node_width')
         ANE['node_width'] = 0
         return {"FINISHED"}
 classes.append(ANE_OT_Delete_NodeWidthItem)
