@@ -21,19 +21,18 @@ class ANE_PT_AligmentAndDistribut(Panel):
             box = layout.box()
             box.label(text= "A new Version is available (" + ANE.Version + ")")
             box.operator(update.ANE_OT_Update.bl_idname, text= "Update")
-        row = layout.row()
+        row = layout.row(align= True)
         col = row.column()
         col.alignment = 'CENTER'
         col.scale_y = 1.5
         col.label(text= 'Active: ')
         box = row.box()
         box.scale_x = 1.6
-        if hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None:
-            nodes = context.space_data.edit_tree.nodes
-            if nodes.active != None:
-                box.label(text= nodes.active.name if nodes.active.label == '' else nodes.active.label)
-            else:
-                box.label(text= "")
+        if hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None and context.space_data.edit_tree.nodes.active != None:
+            active = context.space_data.edit_tree.nodes.active
+            box.label(text= active.name if active.label == '' else active.label)
+        else:
+            box.label(text= "")
         row = layout.row()
         box = layout.box()
         row = box.row()

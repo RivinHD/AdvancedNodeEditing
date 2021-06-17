@@ -11,7 +11,7 @@ bl_info = {
     "author" : "Rivin",
     "description" : "Allows you to format, align, edit your Nodes easily",
     "blender" : (2, 80, 9),
-    "version" : (0, 0, 24),
+    "version" : (0, 0, 25),
     "location" : "Node > UI",
     "category" : "Node"
 }

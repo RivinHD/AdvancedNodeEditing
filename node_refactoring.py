@@ -224,7 +224,7 @@ class ANE_OT_TransferGroupInputValue(Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.object == None or context.object.active_material == None or not hasattr(context.space_data, 'edit_tree'):
+        if context.object == None or context.object.active_material == None or not hasattr(context.space_data, 'edit_tree') or context.space_data.edit_tree is None or context.space_data.edit_tree.nodes.active is None:
             return False
         active = context.space_data.edit_tree.nodes.active
         return active != None and active.type == 'GROUP'
