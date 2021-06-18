@@ -10,7 +10,7 @@ bl_info = {
     "name" : "Advanced Node Editing",
     "author" : "Rivin",
     "description" : "Allows you to format, align, edit your Nodes easily",
-    "blender" : (2, 83, 0),
+    "blender" : (2, 93, 0),
     "version" : (0, 0, 26),
     "location" : "Node > UI",
     "category" : "Node"
