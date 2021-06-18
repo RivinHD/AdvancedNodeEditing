@@ -10,8 +10,8 @@ bl_info = {
     "name" : "Advanced Node Editing",
     "author" : "Rivin",
     "description" : "Allows you to format, align, edit your Nodes easily",
-    "blender" : (2, 80, 9),
-    "version" : (0, 0, 25),
+    "blender" : (2, 83, 0),
+    "version" : (0, 0, 26),
     "location" : "Node > UI",
     "category" : "Node"
 }
@@ -80,6 +80,7 @@ class ANE_Prop(AddonPreferences):
                     ('NodeSocketShader', 'Shader', ''),
                     ('NodeSocketObject', 'Object', 'type Object')]
     NodeSockets : EnumProperty(items= SocketItems, name='Sockets', description='All available Sockets for a Node')
+    NodeType : EnumProperty(items= [("input", "Input", ''), ("output", "Output", '')], name= "Type")
 
 
     def get_fallback_node_items(self):

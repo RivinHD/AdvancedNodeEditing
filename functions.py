@@ -95,11 +95,11 @@ def distribute(selected, index):
             node.location[index] = loc
             loc -= node.dimensions[index]
 
-def getPort(active):
-    if active.active_output != -1:
+def getPort(active, type):
+    if type == 'output':
         index = active.active_output
         socketTyp = active.outputs
-    elif active.active_input != -1:
+    elif type == 'input':
         index = active.active_input
         socketTyp = active.inputs
     return (socketTyp[index], socketTyp, index)
