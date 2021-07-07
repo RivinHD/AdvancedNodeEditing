@@ -13,7 +13,7 @@ class ANE_PT_Input_AdvancedEdit(Panel):
 
     @classmethod
     def poll(cls, context):
-        if not bpy.ops.node.tree_path_parent.poll() or not hasattr(context.space_data, 'edit_tree'):
+        if not bpy.ops.node.tree_path_parent.poll() or not hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None:
             return False
         active = fc.getNodeOfTree(context.object.active_material, context.space_data.edit_tree)
         return active.type == 'GROUP' and bpy.ops.node.tree_path_parent.poll() and (active.node_tree.active_output != -1 or active.node_tree.active_input != -1)
@@ -39,7 +39,7 @@ class ANE_OT_GetTypeOfSelected(Operator):
 
     @classmethod
     def poll(cls, context):
-        if not bpy.ops.node.tree_path_parent.poll() or not hasattr(context.space_data, 'edit_tree'):
+        if not bpy.ops.node.tree_path_parent.poll() or not hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None:
             return False
         active = fc.getNodeOfTree(context.object.active_material, context.space_data.edit_tree)
         return active.type == 'GROUP' and bpy.ops.node.tree_path_parent.poll() and (active.node_tree.active_output != -1 or active.node_tree.active_input != -1)
@@ -61,7 +61,7 @@ class ANE_OT_Apply(Operator):
 
     @classmethod
     def poll(cls, context):
-        if not bpy.ops.node.tree_path_parent.poll() or not hasattr(context.space_data, 'edit_tree'):
+        if not bpy.ops.node.tree_path_parent.poll() or not hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None:
             return False
         active = fc.getNodeOfTree(context.object.active_material, context.space_data.edit_tree)
         return active.type == 'GROUP' and bpy.ops.node.tree_path_parent.poll() and (active.node_tree.active_output != -1 or active.node_tree.active_input != -1)
