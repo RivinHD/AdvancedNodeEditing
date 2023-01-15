@@ -6,6 +6,7 @@ import json
 
 classes = []
 
+
 class ANE_PT_Formating(Panel):
     bl_idname = "ANE_PT_Formating"
     bl_label = "Formating"
@@ -17,37 +18,43 @@ class ANE_PT_Formating(Panel):
         layout = self.layout
         ANE = context.preferences.addons[__package__].preferences
         box = layout.box()
-        col = box.column(align= True)
-        row = col.row(align= True)
+        col = box.column(align=True)
+        row = col.row(align=True)
         col2 = row.column()
         col2.scale_y = 1.5
         col2.alignment = 'CENTER'
-        col2.label(text= 'Main:')
+        col2.label(text='Main:')
         box2 = row.box()
         box2.scale_x = 2
-        box2.label(text= ANE.MainLable)
-        col.operator(ANE_OT_SetMain.bl_idname, text= "Set Main")
-        box.separator(factor= 0.5) #------------------
-        row = box.row(align= True)
-        col = row.column(align= True)
+        box2.label(text=ANE.MainLable)
+        col.operator(ANE_OT_SetMain.bl_idname, text="Set Main")
+        box.separator(factor=0.5)  # ------------------
+        row = box.row(align=True)
+        col = row.column(align=True)
         col.scale_x = 1.5
-        col.operator(ANE_OT_RenameFromSocket.bl_idname, text= "Rename from Socket")
+        col.operator(ANE_OT_RenameFromSocket.bl_idname,
+                     text="Rename from Socket")
         row.prop(ANE, 'SelectionTypeRename', text="")
-        row = box.row(align= True)
-        col = row.column(align= True)
+        row = box.row(align=True)
+        col = row.column(align=True)
         col.scale_x = 1.5
-        col.operator(ANE_OT_SortBySocket.bl_idname, text= "Sort by Socket")
+        col.operator(ANE_OT_SortBySocket.bl_idname, text="Sort by Socket")
         row.prop(ANE, 'SelectionTypeSort', text="")
-        layout.separator(factor= 0.5) #------------------
-        layout.operator(ANE_OT_SimplifyGroup.bl_idname, text= "Simplify Group")
-        layout.operator(ANE_OT_Ungroup.bl_idname, text= 'Advanced Ungroup')
-        layout.operator(ANE_OT_ReplaceWithActive.bl_idname, text= "Replace with Active")
-        col = layout.column(align= True)
+        layout.separator(factor=0.5)  # ------------------
+        layout.operator(ANE_OT_SimplifyGroup.bl_idname, text="Simplify Group")
+        layout.operator(ANE_OT_Ungroup.bl_idname, text='Advanced Ungroup')
+        layout.operator(ANE_OT_ReplaceWithActive.bl_idname,
+                        text="Replace with Active")
+        col = layout.column(align=True)
         row = col.row()
-        row.operator(ANE_OT_Apply_NodeWidth.bl_idname, text="", icon="CHECKMARK")
-        row.label(text= 'Node Width')
-        row.prop(ANE, 'node_width', text= "")
+        row.operator(ANE_OT_Apply_NodeWidth.bl_idname,
+                     text="", icon="CHECKMARK")
+        row.label(text='Node Width')
+        row.prop(ANE, 'node_width', text="")
+
+
 classes.append(ANE_PT_Formating)
+
 
 class ANE_OT_Add_NodeWidthItem(Operator):
     bl_idname = "ane.add_nodewidthitem"
@@ -60,7 +67,10 @@ class ANE_OT_Add_NodeWidthItem(Operator):
         ANE.node_width_items = "a100"
         ANE['node_width'] = len(json.loads(ANE.node_width_items)) - 1
         return {"FINISHED"}
+
+
 classes.append(ANE_OT_Add_NodeWidthItem)
+
 
 class ANE_OT_Delete_NodeWidthItem(Operator):
     bl_idname = "ane.delete_nodewidthitem"
@@ -78,7 +88,10 @@ class ANE_OT_Delete_NodeWidthItem(Operator):
         ANE.node_width_items = "d%s" % fc.get_init_enum(ANE, 'node_width')
         ANE['node_width'] = 0
         return {"FINISHED"}
+
+
 classes.append(ANE_OT_Delete_NodeWidthItem)
+
 
 class ANE_OT_Apply_NodeWidth(Operator):
     bl_idname = "ane.apply_nodewith"
@@ -98,7 +111,10 @@ class ANE_OT_Apply_NodeWidth(Operator):
             if node.select:
                 node.width = int(width.split("-")[1])
         return {"FINISHED"}
+
+
 classes.append(ANE_OT_Apply_NodeWidth)
+
 
 class ANE_OT_SetMain(Operator):
     bl_idname = "ane.set_main"
@@ -121,9 +137,13 @@ class ANE_OT_SetMain(Operator):
         else:
             active = node_tree.nodes.active
             ANE.MainNode = base.name + "\\/" + active.name
-            ANE.MainLable =  (base.name if base.label == '' else base.label) + "/" + (active.name if active.label == '' else active.label)
+            ANE.MainLable = (base.name if base.label == '' else base.label) + \
+                "/" + (active.name if active.label == '' else active.label)
         return {"FINISHED"}
+
+
 classes.append(ANE_OT_SetMain)
+
 
 class ANE_OT_RenameFromSocket(Operator):
     bl_idname = "ane.rename_from_socket"
@@ -164,7 +184,10 @@ class ANE_OT_RenameFromSocket(Operator):
         else:
             context.area.tag_redraw()
             return {"CANCELLED"}
+
+
 classes.append(ANE_OT_RenameFromSocket)
+
 
 class ANE_OT_SortBySocket(Operator):
     bl_idname = "ane.sort_by_socket"
@@ -203,7 +226,10 @@ class ANE_OT_SortBySocket(Operator):
         else:
             context.area.tag_redraw()
             return {"CANCELLED"}
+
+
 classes.append(ANE_OT_SortBySocket)
+
 
 class ANE_OT_SimplifyGroup(Operator):
     bl_idname = "ane.simplify_group"
@@ -233,9 +259,10 @@ class ANE_OT_SimplifyGroup(Operator):
                     if socket in sockets:
                         index = sockets.index(socket)
                         for grouplink in inputNode.outputs[i].links:
-                            group.links.new(grouplink.to_socket, inputNode.outputs[index])
+                            group.links.new(grouplink.to_socket,
+                                            inputNode.outputs[index])
                         group.inputs.remove(group.inputs[i])
-                        offset += 1 
+                        offset += 1
                     else:
                         sockets.append(socket)
             else:
@@ -256,7 +283,8 @@ class ANE_OT_SimplifyGroup(Operator):
                     if socket in sockets:
                         index = sockets.index(socket)
                         for link in nOut.links:
-                            context.space_data.edit_tree.links.new(link.to_socket, active.outputs[index])
+                            context.space_data.edit_tree.links.new(
+                                link.to_socket, active.outputs[index])
                         group.outputs.remove(group.outputs[i])
                         offset += 1
                     else:
@@ -266,7 +294,10 @@ class ANE_OT_SimplifyGroup(Operator):
                     group.outputs.remove(group.outputs[i])
                     offset += 1
         return {"FINISHED"}
+
+
 classes.append(ANE_OT_SimplifyGroup)
+
 
 class ANE_OT_ReplaceWithActive(Operator):
     bl_idname = "ane.replace_with_active"
@@ -297,7 +328,10 @@ class ANE_OT_ReplaceWithActive(Operator):
                         node_tree.links.new(link.to_socket, new.outputs[i])
             nodes.remove(node)
         return {"FINISHED"}
+
+
 classes.append(ANE_OT_ReplaceWithActive)
+
 
 class ANE_OT_Ungroup(Operator):
     bl_idname = "ane.ungroup"
@@ -320,7 +354,8 @@ class ANE_OT_Ungroup(Operator):
     def execute(self, context):
         # distribute I/O nodes
         nodes = context.space_data.edit_tree.nodes
-        left_group_node_loc = fc.sortByLocation(fc.getSelected(nodes), 0, False)[0].location[0]
+        left_group_node_loc = fc.sortByLocation(
+            fc.getSelected(nodes), 0, False)[0].location[0]
         input_nodes = fc.getNodebyNameList(self.nodes_input.keys(), nodes)
         i = 0
         for node in input_nodes:
@@ -330,7 +365,8 @@ class ANE_OT_Ungroup(Operator):
             for subnode in fc.getSubNodes(node, 'input'):
                 subnode.location[0] += offset
             i += 1
-        right_group_node_loc = fc.sortByLocation(fc.getSelected(nodes), 0, True)[0].location[0]
+        right_group_node_loc = fc.sortByLocation(
+            fc.getSelected(nodes), 0, True)[0].location[0]
         output_nodes = fc.getNodebyNameList(self.nodes_output.keys(), nodes)
         i = 0
         for node in output_nodes:
@@ -351,8 +387,9 @@ class ANE_OT_Ungroup(Operator):
 
     def invoke(self, context, event):
         active = context.space_data.edit_tree.nodes.active
-        # save states 
-        selected_nodes = fc.getSelected(context.space_data.edit_tree.nodes, active.name)
+        # save states
+        selected_nodes = fc.getSelected(
+            context.space_data.edit_tree.nodes, active.name)
         for node in selected_nodes:
             node.select = False
         loc = active.location[0]
@@ -374,4 +411,6 @@ class ANE_OT_Ungroup(Operator):
         wm.modal_handler_add(self)
         self.skip = True
         return {'RUNNING_MODAL'}
+
+
 classes.append(ANE_OT_Ungroup)

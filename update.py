@@ -15,12 +15,14 @@ config = {
 classes = []
 
 # functions
+
+
 def CheckForUpdate():
     try:
         updateSource = requests.get(config["checkSource_URL"])
         data = json.loads(updateSource.content.decode("utf-8"))
         updateContent = base64.b64decode(data["content"]).decode("utf-8")
-        with open(os.path.join(os.path.dirname(__file__),"__init__.py"), 'r', encoding= "utf-8", errors='ignore') as currentFile:
+        with open(os.path.join(os.path.dirname(__file__), "__init__.py"), 'r', encoding="utf-8", errors='ignore') as currentFile:
             currentContext = currentFile.read()
             lines = currentContext.splitlines()
             for i in range(15):
@@ -38,38 +40,43 @@ def CheckForUpdate():
         print(e)
         return (False, "no Connection")
 
+
 def GetVersion(line):
-    return eval("(%s)" %line.split("(")[1].split(")")[0])
+    return eval("(%s)" % line.split("(")[1].split(")")[0])
+
 
 def Update():
     source = requests.get(config["repoSource_URL"] + "/archive/master.zip")
     with zipfile.ZipFile(BytesIO(source.content)) as extract:
         for exct in extract.namelist():
             tail, head = os.path.split(exct)
-            dirpath = os.path.join(bpy.app.tempdir, "ANE_Update")   
+            dirpath = os.path.join(bpy.app.tempdir, "ANE_Update")
             if not os.path.exists(dirpath):
                 os.mkdir(dirpath)
             temppath = os.path.join(dirpath, __package__)
             if not os.path.exists(temppath):
                 os.mkdir(temppath)
             if len(tail.split('/')) == 1 and head.endswith(".py"):
-                with open(os.path.join(temppath, head), 'w', encoding= 'utf8') as tempfile:
+                with open(os.path.join(temppath, head), 'w', encoding='utf8') as tempfile:
                     tempfile.write(extract.read(exct).decode("utf-8"))
-        zippath = os.path.join(bpy.app.tempdir, "ANE_Update/" + __package__ +".zip")
+        zippath = os.path.join(
+            bpy.app.tempdir, "ANE_Update/" + __package__ + ".zip")
         with zipfile.ZipFile(zippath, 'w') as zip_it:
             for tempfile in os.listdir(temppath):
                 if tempfile.endswith(".py"):
                     currentpath = os.path.join(temppath, tempfile)
-                    zip_it.write(currentpath, os.path.join(__package__, tempfile))
+                    zip_it.write(currentpath, os.path.join(
+                        __package__, tempfile))
                     os.remove(currentpath)
             else:
                 os.rmdir(temppath)
-        bpy.ops.preferences.addon_install(filepath= zippath)
+        bpy.ops.preferences.addon_install(filepath=zippath)
         os.remove(zippath)
         os.rmdir(dirpath)
 
+
 @persistent
-def onStart(dummy = None):
+def onStart(dummy=None):
     try:
         bpy.app.timers.unregister(onStart)
     except:
@@ -87,6 +94,8 @@ def onStart(dummy = None):
         bpy.ops.ane.check_update('EXEC_DEFAULT')
 
 # Operators
+
+
 class ANE_OT_CheckUpdate(Operator):
     bl_idname = "ane.check_update"
     bl_label = "Check for Update"
@@ -101,7 +110,10 @@ class ANE_OT_CheckUpdate(Operator):
         else:
             ANE.Version = ".".join([str(i) for i in update[1]])
         return {"FINISHED"}
+
+
 classes.append(ANE_OT_CheckUpdate)
+
 
 class ANE_OT_Update(Operator):
     bl_idname = "ane.update"
@@ -115,7 +127,10 @@ class ANE_OT_Update(Operator):
         Update()
         bpy.ops.ane.restart('INVOKE_DEFAULT')
         return {"FINISHED"}
+
+
 classes.append(ANE_OT_Update)
+
 
 class ANE_OT_Restart(Operator):
     bl_idname = "ane.restart"
@@ -127,24 +142,29 @@ class ANE_OT_Restart(Operator):
         if path == '':
             os.startfile(bpy.app.binary_path)
         else:
-            bpy.ops.wm.save_mainfile(filepath= path)
+            bpy.ops.wm.save_mainfile(filepath=path)
             os.startfile(path)
         bpy.ops.wm.quit_blender()
         return {"FINISHED"}
-    
+
     def draw(self, context):
         layout = self.layout
         box = layout.box()
-        box.label(text= "You need to restart Blender to complete the Update")
+        box.label(text="You need to restart Blender to complete the Update")
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
+
+
 classes.append(ANE_OT_Restart)
 
 # def Registartion
+
+
 def register():
     bpy.app.handlers.depsgraph_update_pre.append(onStart)
-    bpy.app.timers.register(onStart, first_interval = 1)
+    bpy.app.timers.register(onStart, first_interval=1)
+
 
 def unregister():
     if onStart in bpy.app.handlers.depsgraph_update_pre:

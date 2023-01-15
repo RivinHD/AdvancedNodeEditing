@@ -1,15 +1,18 @@
 import bpy
 
+
 def resetMain(ANE):
     ANE.MainNode = ""
     ANE.MainLabel = ""
     return False
 
+
 def checkExist(Name, ANE):
     if bpy.context.object == None:
         return resetMain(ANE)
     if bpy.ops.node.tree_path_parent.poll():
-        active = getNodeOfTree(bpy.context.object.active_material, bpy.context.space_data.edit_tree)
+        active = getNodeOfTree(
+            bpy.context.object.active_material, bpy.context.space_data.edit_tree)
         if active == None or active.type != 'GROUP':
             return resetMain(ANE)
         node = Name.split("\\/")
@@ -23,11 +26,14 @@ def checkExist(Name, ANE):
         else:
             return resetMain(ANE)
 
+
 def getDistances(nodes, index):
     l = [0]
     for i in range(len(nodes) - 1):
-        l.append(nodes[i].location[index] - nodes[i].dimensions[index] - nodes[i + 1].location[index])
+        l.append(nodes[i].location[index] -
+                 nodes[i].dimensions[index] - nodes[i + 1].location[index])
     return l
+
 
 def sortNodeLocation(nodes):
     if len(nodes) <= 0:
@@ -41,21 +47,25 @@ def sortNodeLocation(nodes):
         loc -= nodes[i - 1].dimensions[1] + nodesDistances[i]
         nodes[i].location[1] = loc
 
+
 def getGroupPorts(nodes, port):
     groupType = "GROUP_" + port
     for node in nodes:
         if node.type == groupType:
             return node
 
-def getSelected(nodes, exclude = None):
+
+def getSelected(nodes, exclude=None):
     l = []
     for node in nodes:
         if node.select and node.name != exclude:
             l.append(node)
     return l
 
+
 def sortByLocation(nodes, index, reverse):
-    return sorted(nodes, key=lambda x: (x.location[index], x.name), reverse= reverse)
+    return sorted(nodes, key=lambda x: (x.location[index], x.name), reverse=reverse)
+
 
 def getLow(nodes, index):
     low = nodes[0].location[index] - index * nodes[0].dimensions[index]
@@ -65,18 +75,23 @@ def getLow(nodes, index):
             low = checkLow
     return low
 
+
 def getHeigh(nodes, index):
+    if len(nodes) <= 0:
+        return 0
     high = nodes[0].location[index] + (1 - index) * nodes[0].dimensions[index]
     for node in nodes[1:]:
         checkHigh = node.location[index] + (1 - index) * node.dimensions[index]
         if checkHigh > high:
             high = checkHigh
-    return high 
+    return high
+
 
 def checkFit(nodes, index, distance):
     for node in nodes:
         distance -= node.dimensions[index]
-    return (distance >= 0, distance) 
+    return (distance >= 0, distance)
+
 
 def distribute(selected, index):
     selected = sortByLocation(selected, index, True)
@@ -84,7 +99,10 @@ def distribute(selected, index):
     low = getLow(selected, index)
     check, space = checkFit(selected, index, heigh - low)
     if check:
-        singleSpace = space/(len(selected) - 1)
+        selected_non_active = len(selected) - 1
+        if selected_non_active <= 0:
+            selected_non_active = 1
+        singleSpace = space/selected_non_active
         loc = selected[0].location[index]
         for node in selected:
             node.location[index] = loc
@@ -95,6 +113,7 @@ def distribute(selected, index):
             node.location[index] = loc
             loc -= node.dimensions[index]
 
+
 def getPort(active, type):
     if type == 'output':
         index = active.active_output
@@ -104,10 +123,12 @@ def getPort(active, type):
         socketTyp = active.inputs
     return (socketTyp[index], socketTyp, index)
 
+
 def findNodeOfSocket(nodes, Type):
     for node in nodes:
         if node.type == 'GROUP_' + Type:
             return node
+
 
 def getDefaultSocket(active, port, index):
     portType = 'OUTPUT' if port.is_output else 'INPUT'
@@ -118,11 +139,13 @@ def getDefaultSocket(active, port, index):
         nodePort = node.outputs[index]
     return nodePort.bl_idname
 
+
 def find_node_input(nodes):
     for node in nodes:
         if node.bl_idname == "NodeGroupInput":
             return node
     raise ValueError("No NodeGroupInput.")
+
 
 def get_terminal_to_sockets(to_socket):
     if to_socket.node.bl_idname != "NodeReroute":
@@ -131,6 +154,7 @@ def get_terminal_to_sockets(to_socket):
     for link in to_socket.node.outputs[0].links:
         to_sockets.extend(get_terminal_to_sockets(link.to_socket))
     return to_sockets
+
 
 def transfer_output_value(output, port):
     to_sockets = []
@@ -141,6 +165,7 @@ def transfer_output_value(output, port):
         if to_socket.type == port.type:
             to_socket.default_value = port.default_value
 
+
 def getMainNode(mainNode, node_tree):
     mainNode = mainNode.split("\\/")
     if bpy.ops.node.tree_path_parent.poll() and len(mainNode) > 1:
@@ -148,7 +173,10 @@ def getMainNode(mainNode, node_tree):
     else:
         return node_tree.nodes[mainNode[0]]
 
+
 def getNodeOfTree(base, node_tree):
+    if not (base and hasattr(base, 'node_tree')):
+        return None
     if base.node_tree == node_tree:
         return base
     else:
@@ -158,6 +186,7 @@ def getNodeOfTree(base, node_tree):
         else:
             return getNodeOfTree(searchInNodes(base, node_tree), node_tree)
 
+
 def searchInNodes(base, node_tree):
     for node in base.node_tree.nodes:
         if node.type == 'GROUP':
@@ -165,6 +194,7 @@ def searchInNodes(base, node_tree):
                 return node
             else:
                 return searchInNodes(node, node_tree)
+
 
 def copyData(dataObj, obj):
     props = dataObj.rna_type.properties
@@ -177,9 +207,10 @@ def copyData(dataObj, obj):
     for nOut in dataObj.outputs:
         obj.outputs[nOut.identifier].default_value = nOut.default_value
 
+
 def getSubNodes(main, direction):
     nodes = []
-    if direction ==  'input':
+    if direction == 'input':
         for inp in main.inputs:
             for link in inp.links:
                 node = link.from_node
@@ -192,6 +223,7 @@ def getSubNodes(main, direction):
                 nodes.append(node)
                 nodes.extend(getSubNodes(node, 'output'))
     return nodes
+
 
 def getNodebyNameList(name_list, nodes):
     l = []

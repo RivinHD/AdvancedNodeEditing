@@ -5,6 +5,7 @@ from . import functions as fc
 
 classes = []
 
+
 class ANE_PT_NodeRefactoring(Panel):
     bl_idname = "ANE_PT_NodeRefactoring"
     bl_label = "Node Refactoring"
@@ -17,11 +18,14 @@ class ANE_PT_NodeRefactoring(Panel):
         layout = self.layout
         layout.operator(ANE_OT_TransferGroupInputValue.bl_idname)
         layout.operator(ANE_OT_ExtractNodeValues.bl_idname)
-        col = layout.column(align= True)
+        col = layout.column(align=True)
         row = col.row()
-        row.label(text= "Fallback Node")
-        row.prop(ANE, 'fallback_node', text= "")
+        row.label(text="Fallback Node")
+        row.prop(ANE, 'fallback_node', text="")
+
+
 classes.append(ANE_PT_NodeRefactoring)
+
 
 class ANE_OT_Add_FallbackNodeItem(Operator):
     bl_idname = "ane.add_fallbacknodeitem"
@@ -46,10 +50,14 @@ class ANE_OT_Add_FallbackNodeItem(Operator):
             if area.type == 'NODE_EDITOR':
                 active = area.spaces[0].edit_tree.nodes.active
                 break
-        ANE.fallback_node_items = 'a{"name": "' + active.bl_rna.name + '", "node": "' + active.bl_idname + '"}'
+        ANE.fallback_node_items = 'a{"name": "' + \
+            active.bl_rna.name + '", "node": "' + active.bl_idname + '"}'
         ANE['fallback_node'] = len(json.loads(ANE.fallback_node_items)) - 1
         return {"FINISHED"}
+
+
 classes.append(ANE_OT_Add_FallbackNodeItem)
+
 
 class ANE_OT_Delete_FallbackNodeItem(Operator):
     bl_idname = "ane.delete_fallbacknodeitem"
@@ -64,15 +72,19 @@ class ANE_OT_Delete_FallbackNodeItem(Operator):
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
-        ANE.fallback_node_items = "d%s" % fc.get_init_enum(ANE, 'fallback_node')
+        ANE.fallback_node_items = "d%s" % fc.get_init_enum(
+            ANE, 'fallback_node')
         ANE['fallback_node'] = 0
         return {"FINISHED"}
+
+
 classes.append(ANE_OT_Delete_FallbackNodeItem)
+
 
 class ANE_OT_ExtractNodeValues(Operator):
     bl_idname = "ane.extract_node_values"
     bl_region_type = 'UI'
-    bl_category = 'Item' 
+    bl_category = 'Item'
     bl_label = "Extract Node Values"
 
     inputNodes = []
@@ -87,7 +99,6 @@ class ANE_OT_ExtractNodeValues(Operator):
         ANE = context.preferences.addons[__package__].preferences
         nodes = context.space_data.edit_tree.nodes
         active = nodes.active
-        offset = ANE.DistributOffset
         for node in fc.getSelected(nodes):
             node.select = False
         inputNodes = fc.getNodebyNameList(self.inputNodes, nodes)
@@ -95,8 +106,8 @@ class ANE_OT_ExtractNodeValues(Operator):
             for node in inputNodes:
                 node.select = True
             nodes.active = inputNodes[0]
-            ANE.DistributOffset = 0
-            bpy.ops.ane.distribute(context.copy(),'INVOKE_DEFAULT', False, Pivot="Bottom")
+            bpy.ops.ane.distribute(
+                context.copy(), 'INVOKE_DEFAULT', False, Pivot="Bottom")
             for node in inputNodes:
                 node.select = False
         outputNodes = fc.getNodebyNameList(self.outputNodes, nodes)
@@ -104,12 +115,11 @@ class ANE_OT_ExtractNodeValues(Operator):
             for node in outputNodes:
                 node.select = True
             nodes.active = outputNodes[0]
-            ANE.DistributOffset = 0
-            bpy.ops.ane.distribute(context.copy(),'INVOKE_DEFAULT', False, Pivot="Bottom")
+            bpy.ops.ane.distribute(
+                context.copy(), 'INVOKE_DEFAULT', False, Pivot="Bottom")
             for node in outputNodes:
                 node.select = False
         nodes.active = active
-        ANE.DistributOffset = offset
         return {'FINISHED'}
 
     def modal(self, context, event):
@@ -210,13 +220,16 @@ class ANE_OT_ExtractNodeValues(Operator):
         bpy.ops.ane.rename_from_socket()
         ANE.SelectionTypeRename = last
         context.space_data.edit_tree.nodes.active = active_node
-        
+
         wm = context.window_manager
         self._timer = wm.event_timer_add(0, window=context.window)
         wm.modal_handler_add(self)
         self.skip = True
         return {'RUNNING_MODAL'}
+
+
 classes.append(ANE_OT_ExtractNodeValues)
+
 
 class ANE_OT_TransferGroupInputValue(Operator):
     bl_idname = "ane.transfer_groupinput_value"
@@ -234,9 +247,13 @@ class ANE_OT_TransferGroupInputValue(Operator):
         if node_group_instance.bl_idname != "ShaderNodeGroup":
             self.report({'ERROR'}, "select ShaderNodeGroup")
             return {"CANCELLED"}
-        node_group_input = fc.find_node_input(node_group_instance.node_tree.nodes)
+        node_group_input = fc.find_node_input(
+            node_group_instance.node_tree.nodes)
         for socket_index, output in enumerate(node_group_input.outputs):
             if hasattr(output, 'default_value'):
-                fc.transfer_output_value(output, node_group_instance.inputs[socket_index])
+                fc.transfer_output_value(
+                    output, node_group_instance.inputs[socket_index])
         return {'FINISHED'}
+
+
 classes.append(ANE_OT_TransferGroupInputValue)
