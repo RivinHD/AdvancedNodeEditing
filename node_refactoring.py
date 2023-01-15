@@ -42,7 +42,7 @@ class ANE_OT_Add_FallbackNodeItem(Operator):
                 break
         else:
             return False
-        return context.object != None and context.object.active_material != None and hasattr(space_data, 'edit_tree') and space_data.edit_tree != None and space_data.edit_tree.nodes.active != None
+        return context.object is not None and context.object.active_material is not None and hasattr(space_data, 'edit_tree') and space_data.edit_tree is not None and space_data.edit_tree.nodes.active is not None
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
@@ -93,7 +93,7 @@ class ANE_OT_ExtractNodeValues(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None and context.space_data.edit_tree.nodes.active != None
+        return context.object is not None and context.object.active_material is not None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree is not None and context.space_data.edit_tree.nodes.active is not None
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
@@ -105,18 +105,28 @@ class ANE_OT_ExtractNodeValues(Operator):
         if len(inputNodes):
             for node in inputNodes:
                 node.select = True
-            nodes.active = inputNodes[0]
             bpy.ops.ane.distribute(
-                context.copy(), 'INVOKE_DEFAULT', False, Pivot="Bottom")
+                context.copy(),
+                'INVOKE_DEFAULT',
+                False,
+                Pivot="Vertical",
+                override_offset=True,
+                offset=0
+            )
             for node in inputNodes:
                 node.select = False
         outputNodes = fc.getNodebyNameList(self.outputNodes, nodes)
         if len(outputNodes):
             for node in outputNodes:
                 node.select = True
-            nodes.active = outputNodes[0]
             bpy.ops.ane.distribute(
-                context.copy(), 'INVOKE_DEFAULT', False, Pivot="Bottom")
+                context.copy(),
+                'INVOKE_DEFAULT',
+                False,
+                Pivot="Vertical",
+                override_offset=True,
+                offset=0
+            )
             for node in outputNodes:
                 node.select = False
         nodes.active = active
@@ -183,7 +193,7 @@ class ANE_OT_ExtractNodeValues(Operator):
         self.inputNodes = []
         for i in range(len(active_node.inputs)):
             input = active_node.inputs[i]
-            if input.bl_idname == 'NodeSocketVirtual':
+            if input.bl_idname == 'NodeSocketVirtual' or not input.enabled:
                 continue
             view_node = create_input_node(input.type)
             if view_node is None:
@@ -204,7 +214,7 @@ class ANE_OT_ExtractNodeValues(Operator):
         self.outputNodes = []
         for i in range(len(active_node.outputs)):
             output = active_node.outputs[i]
-            if output.bl_idname == 'NodeSocketVirtual':
+            if output.bl_idname == 'NodeSocketVirtual' or not output.enabled:
                 continue
             view_node = create_output_node(output.type)
             if view_node is None:
@@ -240,7 +250,7 @@ class ANE_OT_TransferGroupInputValue(Operator):
         if context.object == None or context.object.active_material == None or not hasattr(context.space_data, 'edit_tree') or context.space_data.edit_tree is None or context.space_data.edit_tree.nodes.active is None:
             return False
         active = context.space_data.edit_tree.nodes.active
-        return active != None and active.type == 'GROUP'
+        return active is not None and active.type == 'GROUP'
 
     def execute(self, context):
         node_group_instance = context.space_data.edit_tree.nodes.active

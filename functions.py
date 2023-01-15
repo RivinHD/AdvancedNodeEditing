@@ -93,7 +93,7 @@ def checkFit(nodes, index, distance):
     return (distance >= 0, distance)
 
 
-def distribute(selected, index):
+def distribute(selected, index, offset=0):
     selected = sortByLocation(selected, index, True)
     heigh = getHeigh(selected, index)
     low = getLow(selected, index)
@@ -103,15 +103,17 @@ def distribute(selected, index):
         if selected_non_active <= 0:
             selected_non_active = 1
         singleSpace = space/selected_non_active
+        if offset > 0:
+            singleSpace = 0
         loc = selected[0].location[index]
         for node in selected:
-            node.location[index] = loc
-            loc -= node.dimensions[index] + singleSpace
+            node.location[index] = loc 
+            loc -= node.dimensions[index] + singleSpace + offset
     else:
         loc = selected[0].location[index] + space * -0.5
         for node in selected:
             node.location[index] = loc
-            loc -= node.dimensions[index]
+            loc -= node.dimensions[index] + offset
 
 
 def getPort(active, type):

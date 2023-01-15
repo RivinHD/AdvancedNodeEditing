@@ -1,6 +1,6 @@
 import bpy
 from bpy.types import Operator, Panel
-from bpy.props import EnumProperty
+from bpy.props import EnumProperty, BoolProperty, IntProperty
 from . import functions as fc
 from . import update
 import json
@@ -29,7 +29,7 @@ class ANE_PT_AligmentAndDistribut(Panel):
         col.label(text='Active: ')
         box = row.box()
         box.scale_x = 1.6
-        if hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None and context.space_data.edit_tree.nodes.active != None:
+        if hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree is not None and context.space_data.edit_tree.nodes.active is not None:
             active = context.space_data.edit_tree.nodes.active
             box.label(text=active.name if active.label == '' else active.label)
         else:
@@ -160,7 +160,7 @@ class ANE_OT_ALign(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None and context.space_data.edit_tree.nodes.active != None
+        return context.object is not None and context.object.active_material is not None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree is not None and context.space_data.edit_tree.nodes.active is not None
 
     def execute(self, context):
         nodes = context.space_data.edit_tree.nodes
@@ -191,7 +191,9 @@ classes.append(ANE_OT_ALign)
 class ANE_OT_Distribute(Operator):
     bl_idname = "ane.distribute"
     bl_label = "Distribute"
-    bl_description = "Distribute the selected Nodes relativ to the active Node"
+    bl_description = """Distribute the selected Nodes relativ to the active Node
+
+Shift: use the offset for spacing the nodes (only works with Vertical, Horizontal)"""
     bl_options = {"REGISTER"}
 
     pivotItems = [("Left", "Left", ""),
@@ -201,48 +203,64 @@ class ANE_OT_Distribute(Operator):
                   ("Vertical", "Vertical", ""),
                   ("Horizontal", "Horizontal", "")]
     Pivot: EnumProperty(items=pivotItems, name="pivot")
+    use_offset: BoolProperty(
+        default=False,
+        name="use offset",
+        description="Uses the offset instead of the given area to distribute the nodes"
+    )
+    override_offset: BoolProperty(
+        default=False,
+        name="override offset",
+        description="Uses the operator based offset instead of the preference set offset"
+    )
+    offset: IntProperty(name="offset", default=0)
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None and context.space_data.edit_tree.nodes.active != None
+        return context.object is not None and context.object.active_material is not None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree is not None and context.space_data.edit_tree.nodes.active is not None
+
+    def invoke(self, context: bpy.types.Context, event: bpy.types.Event):
+        self.use_offset = event.shift
+        return self.execute(context)
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
         nodes = context.space_data.edit_tree.nodes
+        offset = int(ANE.distribute_offset.split('-')[1])
+        if self.override_offset:
+            offset = self.offset
+        active = nodes.active
+        selected = fc.getSelected(nodes, active.name)
         if not (self.Pivot == "Vertical" or self.Pivot == "Horizontal"):
-            offset = int(ANE.distribute_offset.split('-')[1])
-            active = nodes.active
-            selected = fc.getSelected(nodes, active.name)
             if self.Pivot == 'Left':
                 selected = fc.sortByLocation(selected, 0, True)
                 loc = active.location[0]
                 for node in selected:
                     node.location[0] = loc - offset - node.dimensions[0]
-                    loc = node.location[0]
+                    # loc = node.location[0]
             elif self.Pivot == 'Right':
                 selected = fc.sortByLocation(selected, 0, False)
                 loc = active.location[0] + active.dimensions[0]
                 for node in selected:
                     node.location[0] = loc + offset
-                    loc = node.location[0] + node.dimensions[0]
+                    # loc = node.location[0] + node.dimensions[0]
             elif self.Pivot == 'Top':
                 selected = fc.sortByLocation(selected, 1, False)
                 loc = active.location[1]
                 for node in selected:
                     node.location[1] = loc + offset + node.dimensions[1]
-                    loc = node.location[1]
+                    # loc = node.location[1]
             else:
                 selected = fc.sortByLocation(selected, 1, True)
                 loc = active.location[1] - active.dimensions[1]
                 for node in selected:
                     node.location[1] = loc - offset
-                    loc = node.location[1] - node.dimensions[1]
+                    # loc = node.location[1] - node.dimensions[1]
         else:
-            selected = fc.getSelected(nodes)
             if self.Pivot == 'Vertical':
-                fc.distribute(selected, 1)
+                fc.distribute(selected, 1, offset * self.use_offset)
             else:
-                fc.distribute(selected, 0)
+                fc.distribute(selected, 0, offset * self.use_offset)
         return {"FINISHED"}
 
 

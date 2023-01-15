@@ -11,7 +11,7 @@ bl_info = {
     "author": "Rivin",
     "description": "Allows you to format, align, edit your Nodes easily",
     "blender": (3, 3, 0),
-    "version": (0, 1, 0),
+    "version": (0, 1, 1),
     "location": "Node > UI",
     "category": "Node"
 }
@@ -75,7 +75,7 @@ class ANE_Prop(AddonPreferences):
 
     distribute_offset: EnumProperty(
         name='Offset',
-        description='changes the width of the active Node',
+        description='changes the width of the active Node. New offsets can be added in the preferences',
         items=item_distribute_offset
     )
 
@@ -154,7 +154,7 @@ class ANE_Prop(AddonPreferences):
             i += 1
         return l
     fallback_node: EnumProperty(
-        name='Fallback Node', description="used if I/O hasn't an assigned node", items=item_fallback_node)
+        name='Fallback Node', description="used if I/O hasn't an assigned node. New Fallback Nodes can be added in the preferences", items=item_fallback_node)
 
     def get_fallback(self):
         return self.fallback_node.split("-")[1]
@@ -219,7 +219,7 @@ class ANE_Prop(AddonPreferences):
 
     node_width: EnumProperty(
         name='Node Width',
-        description='changes the width of the active Node',
+        description='changes the width of the active Node. New Widths can be added in the preferences',
         items=item_node_width
     )
 

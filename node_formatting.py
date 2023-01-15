@@ -102,7 +102,7 @@ class ANE_OT_Apply_NodeWidth(Operator):
     @classmethod
     def poll(cls, context):
         ANE = context.preferences.addons[__package__].preferences
-        return len(ANE.node_width) - 1 and context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None and context.space_data.edit_tree.nodes.active != None
+        return len(ANE.node_width) - 1 and context.object is not None and context.object.active_material is not None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree is not None and context.space_data.edit_tree.nodes.active is not None
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
@@ -124,7 +124,7 @@ class ANE_OT_SetMain(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None and context.space_data.edit_tree.nodes.active != None
+        return context.object is not None and context.object.active_material is not None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree is not None and context.space_data.edit_tree.nodes.active is not None
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
@@ -154,7 +154,7 @@ class ANE_OT_RenameFromSocket(Operator):
     @classmethod
     def poll(cls, context):
         ANE = context.preferences.addons[__package__].preferences
-        return ANE.MainNode != "" and context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree')
+        return ANE.MainNode != "" and context.object is not None and context.object.active_material is not None and hasattr(context.space_data, 'edit_tree')
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
@@ -198,7 +198,7 @@ class ANE_OT_SortBySocket(Operator):
     @classmethod
     def poll(cls, context):
         ANE = context.preferences.addons[__package__].preferences
-        return ANE.MainNode != "" and context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree')
+        return ANE.MainNode != "" and context.object is not None and context.object.active_material is not None and hasattr(context.space_data, 'edit_tree')
 
     def execute(self, context):
         ANE = context.preferences.addons[__package__].preferences
@@ -242,7 +242,7 @@ class ANE_OT_SimplifyGroup(Operator):
         if context.object == None or context.object.active_material == None or not hasattr(context.space_data, 'edit_tree') or context.space_data.edit_tree is None or context.space_data.edit_tree.nodes.active is None:
             return False
         active = context.space_data.edit_tree.nodes.active
-        return active != None and active.type == 'GROUP'
+        return active is not None and active.type == 'GROUP'
 
     def execute(self, context):
         active = context.space_data.edit_tree.nodes.active
@@ -302,12 +302,11 @@ classes.append(ANE_OT_SimplifyGroup)
 class ANE_OT_ReplaceWithActive(Operator):
     bl_idname = "ane.replace_with_active"
     bl_label = "Replace with Active"
-    bl_description = "Description that shows in blender tooltips"
     bl_options = {"REGISTER"}
 
     @classmethod
     def poll(cls, context):
-        return context.object != None and context.object.active_material != None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None and context.space_data.edit_tree.nodes.active != None
+        return context.object is not None and context.object.active_material is not None and hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree is not None and context.space_data.edit_tree.nodes.active is not None
 
     def execute(self, context):
         node_tree = context.space_data.edit_tree
@@ -349,7 +348,7 @@ class ANE_OT_Ungroup(Operator):
         if context.object == None or context.object.active_material == None or not hasattr(context.space_data, 'edit_tree') or context.space_data.edit_tree is None or context.space_data.edit_tree.nodes.active is None:
             return False
         active = context.space_data.edit_tree.nodes.active
-        return active != None and active.type == 'GROUP'
+        return active is not None and active.type == 'GROUP'
 
     def execute(self, context):
         # distribute I/O nodes

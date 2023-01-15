@@ -14,7 +14,7 @@ class ANE_PT_Input_AdvancedEdit(Panel):
 
     @classmethod
     def poll(cls, context):
-        if not bpy.ops.node.tree_path_parent.poll() or not hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None:
+        if not bpy.ops.node.tree_path_parent.poll() or not hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree is not None:
             return False
         active = fc.getNodeOfTree(
             context.object.active_material, context.space_data.edit_tree)
@@ -46,7 +46,7 @@ class ANE_OT_GetTypeOfSelected(Operator):
 
     @classmethod
     def poll(cls, context):
-        if not bpy.ops.node.tree_path_parent.poll() or not hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None:
+        if not bpy.ops.node.tree_path_parent.poll() or not hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree is not None:
             return False
         active = fc.getNodeOfTree(
             context.object.active_material, context.space_data.edit_tree)
@@ -73,7 +73,7 @@ class ANE_OT_Apply(Operator):
 
     @classmethod
     def poll(cls, context):
-        if not bpy.ops.node.tree_path_parent.poll() or not hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree != None:
+        if not bpy.ops.node.tree_path_parent.poll() or not hasattr(context.space_data, 'edit_tree') and context.space_data.edit_tree is not None:
             return False
         active = fc.getNodeOfTree(
             context.object.active_material, context.space_data.edit_tree)
@@ -101,7 +101,7 @@ class ANE_OT_Apply(Operator):
             else:
                 activeNode.inputs[-1].default_value = activeNode.inputs[index].default_value
         except TypeError:
-            if default != None:
+            if default is not None:
                 if hasattr(default, 'is_array') and default.is_array:
                     new.default_value = default.default_array
                 else:
