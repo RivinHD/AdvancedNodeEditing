@@ -123,6 +123,8 @@ def getPort(active, type):
     elif type == 'input':
         index = active.active_input
         socketTyp = active.inputs
+    if index <= -1 or len(socketTyp) <= index:
+        return (None, socketTyp, index)
     return (socketTyp[index], socketTyp, index)
 
 

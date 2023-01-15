@@ -1,6 +1,7 @@
 import bpy
 from bpy.types import Operator, Panel
 from . import functions as fc
+from contextlib import suppress
 
 classes = []
 
@@ -10,7 +11,7 @@ class ANE_PT_Input_AdvancedEdit(Panel):
     bl_label = "Advanced"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
-    bl_category = "Node"
+    bl_category = "Group"
 
     @classmethod
     def poll(cls, context):
@@ -87,29 +88,35 @@ class ANE_OT_Apply(Operator):
         nodetype = ANE.NodeType
         port, socket, index = fc.getPort(active, nodetype)
         socketType = ANE.NodeSockets
+        if port is None:
+            self.report(
+                {'ERROR'},
+                "The chosen IO is not available. Please select an IO in the Inputs/Outputs-List"
+            )
+            return {"CANCELLED"}
 
         # Copy Data
         new = socket.new(socketType, port.name)
-        props = getattr(bpy.types, socketType).bl_rna.properties
-        if props.find('default_value') != -1:
-            default = props['default_value']
-        else:
-            default = None
+        default = None
+        with suppress(AttributeError):
+            props = getattr(bpy.types, socketType).bl_rna.properties
+            if props.find('default_value') != -1:
+                default = props['default_value']
         try:
             if port.is_output:
                 activeNode.outputs[-1].default_value = activeNode.outputs[index].default_value
             else:
                 activeNode.inputs[-1].default_value = activeNode.inputs[index].default_value
-        except TypeError:
+        except (TypeError, AttributeError, ValueError):
             if default is not None:
                 if hasattr(default, 'is_array') and default.is_array:
                     new.default_value = default.default_array
-                else:
+                elif hasattr(default, 'default'):
                     new.default_value = default.default
         try:
             new.min_value = port.min_value
             new.max_value = port.max_value
-        except AttributeError:
+        except (AttributeError, TypeError):
             if hasattr(new, 'min_value'):
                 new.min_value = default.soft_min
                 new.max_value = default.soft_max
